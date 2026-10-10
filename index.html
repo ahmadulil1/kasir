@@ -46,14 +46,23 @@
     label { font-size: 13px; color: var(--mut); font-weight: 600; display: block; margin-bottom: 4px; }
     input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--b); outline-offset: 2px; }
 
-    /* --- Layout Tablet: 2 kolom --- */
+    @media (max-width: 767px) {
+      .pos-right { position: sticky; bottom: 78px; max-height: 52vh; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 16px; z-index: 4; }
+      .pos-right .card { padding: 10px; }
+      .pos-right button { padding: 12px; }
+    }
+
+    /* --- Layout POS 2 panel --- */
+    .pos-wrap { display: flex; flex-direction: column; gap: 12px; }
+    .pos-right { display: flex; flex-direction: column; gap: 12px; }
+
     @media (min-width: 768px) {
       body { max-width: 1100px; margin: 0 auto; }
       main { padding-bottom: 96px; }
-      #kasir { display: none; }
-      #kasir.on { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
-      #kasir .card:nth-child(n+3) { grid-column: span 2; }
-      #stok .card, #lap .card { max-width: 640px; }
+      .pos-wrap { flex-direction: row; align-items: flex-start; }
+      .pos-left { flex: 1.5; min-width: 0; }
+      .pos-right { flex: 1; position: sticky; top: 16px; max-height: calc(100vh - 130px); overflow-y: auto; }
+      #grid { grid-template-columns: repeat(3, 1fr); }
     }
     #scan { position: fixed; inset: 0; background: #000; z-index: 9; display: none; flex-direction: column; }
     #scan.on { display: flex; }
@@ -76,7 +85,7 @@
     .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
     .chips button { flex: none; background: #e0e0e0; color: #333; padding: 8px 14px; font-size: 13px; border-radius: 20px; box-shadow: none; }
     .chips button.on { background: var(--v); color: #fff; }
-    @media (min-width: 768px) { #grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (min-width: 768px) { #grid { grid-template-columns: repeat(3, 1fr); } }
     @media print {
       body * { visibility: hidden; }
       #struk, #struk *, #printbar, #printbar * { visibility: visible; }
@@ -107,50 +116,56 @@
 
   <main id="app" style="display:none">
     <div class="tab on" id="kasir">
-      <button class="b" onclick="scan()">📷 Scan</button>
-      <input id="pq" placeholder="🔍 Cari produk..." oninput="searchProd()" style="margin:0">
-      <div class="chips" id="chips"></div>
-      <div id="grid"></div>
-      <div class="card" id="struk">
-        <h3>🧺 Keranjang</h3>
-        <ul id="list"></ul>
-        <div class="empty" id="emptycart">Keranjang masih kosong</div>
-        <hr style="border:none;border-top:2px dashed #e5e7eb;margin:12px 0">
-        <div class="row" id="disc-row" style="display:none;margin-bottom:6px">
-          <span class="tag" style="font-size:13px">Diskon</span>
-          <span class="big" style="text-align:right;flex:1;color:var(--r);font-size:15px" id="disc-amt">-Rp0</span>
+      <div class="pos-wrap">
+        <div class="pos-left">
+          <button class="b" onclick="scan()">📷 Scan</button>
+          <input id="pq" placeholder="🔍 Cari produk..." oninput="searchProd()" style="margin:0">
+          <div class="chips" id="chips"></div>
+          <div id="grid"></div>
         </div>
-        <div class="row" style="align-items:center">
-          <span class="big">Total</span>
-          <span class="amt" style="text-align:right;flex:1">Rp<span id="tot">0</span></span>
+        <div class="pos-right">
+          <div class="card" id="struk">
+            <h3>🧺 Keranjang</h3>
+            <ul id="list"></ul>
+            <div class="empty" id="emptycart">Keranjang masih kosong</div>
+            <hr style="border:none;border-top:2px dashed #e5e7eb;margin:12px 0">
+            <div class="row" id="disc-row" style="display:none;margin-bottom:6px">
+              <span class="tag" style="font-size:13px">Diskon</span>
+              <span class="big" style="text-align:right;flex:1;color:var(--r);font-size:15px" id="disc-amt">-Rp0</span>
+            </div>
+            <div class="row" style="align-items:center">
+              <span class="big">Total</span>
+              <span class="amt" style="text-align:right;flex:1">Rp<span id="tot">0</span></span>
+            </div>
+          </div>
+          <div class="card">
+            <h3>💳 Pembayaran</h3>
+            <select id="paym" onchange="chgPay()">
+              <option value="Tunai">💵 Tunai</option>
+              <option value="QRIS">📱 QRIS</option>
+              <option value="Kartu">💳 Kartu Debit</option>
+              <option value="Transfer">🏦 Transfer</option>
+            </select>
+            <input id="cash" type="number" placeholder="Uang Diterima (Rp)" style="display:none" oninput="chgPay()">
+            <div id="chgbox" style="display:none;background:#ecfdf5;border-radius:12px;padding:12px;margin-top:4px">
+              <span class="tag" style="font-size:12px">Kembalian</span>
+              <span class="big" style="color:var(--g)">Rp<span id="chg">0</span></span>
+            </div>
+          </div>
+          <div class="card">
+            <h3>🏷️ Diskon</h3>
+            <div class="row">
+              <select id="disc-type" onchange="applyDisc()">
+                <option value="nominal">Nominal (Rp)</option>
+                <option value="persen">Persen (%)</option>
+              </select>
+              <input id="disc-val" type="number" placeholder="0" oninput="applyDisc()">
+            </div>
+          </div>
+          <button class="g" onclick="pay()">💰 Bayar & Cetak</button>
+          <button class="r" onclick="reset()">✖ Batal</button>
         </div>
       </div>
-      <div class="card">
-        <h3>🏷️ Diskon</h3>
-        <div class="row">
-          <select id="disc-type" onchange="applyDisc()">
-            <option value="nominal">Nominal (Rp)</option>
-            <option value="persen">Persen (%)</option>
-          </select>
-          <input id="disc-val" type="number" placeholder="0" oninput="applyDisc()">
-        </div>
-      </div>
-      <div class="card">
-        <h3>💳 Pembayaran</h3>
-        <select id="paym" onchange="chgPay()">
-          <option value="Tunai">💵 Tunai</option>
-          <option value="QRIS">📱 QRIS</option>
-          <option value="Kartu">💳 Kartu Debit</option>
-          <option value="Transfer">🏦 Transfer</option>
-        </select>
-        <input id="cash" type="number" placeholder="Uang Diterima (Rp)" style="display:none" oninput="chgPay()">
-        <div id="chgbox" style="display:none;background:#ecfdf5;border-radius:12px;padding:12px;margin-top:4px">
-          <span class="tag" style="font-size:12px">Kembalian</span>
-          <span class="big" style="color:var(--g)">Rp<span id="chg">0</span></span>
-        </div>
-      </div>
-      <button class="g" onclick="pay()">💰 Bayar & Cetak</button>
-      <button class="r" onclick="reset()">✖ Batal</button>
     </div>
 
     <div class="tab" id="stok">
