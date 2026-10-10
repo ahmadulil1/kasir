@@ -85,7 +85,7 @@ console.log('\n[5] localStorage rusak tidak crash');
         const ctx = {
             navigator: { onLine: true },
             localStorage: { getItem: () => { throw new Error('corrupt'); }, setItem: () => {} },
-            document: { body: { classList: { toggle: () => false, add: () => {} } }, getElementById: () => ({ style: {}, textContent: '', value: '', innerHTML: '', classList: { toggle: () => {}, add: () => {}, remove: () => {} } }), addEventListener: () => {}, createElement: () => ({ style: {}, click: () => {} }) },
+            document: { body: { classList: { toggle: () => false, add: () => {} } }, getElementById: () => ({ style: {}, textContent: '', value: '', innerHTML: '', dataset: {}, classList: { toggle: () => {}, add: () => {}, remove: () => {} }, appendChild: () => {}, getContext: () => ({ drawImage: () => {} }), toDataURL: () => 'data:image/jpeg;base64,x' }), addEventListener: () => {}, createElement: () => ({ style: {}, click: () => {} }) },
             crypto: { randomUUID: () => 'x' }, console, alert: () => {}, confirm: () => true,
             addEventListener: () => {}, removeEventListener: () => {}, URL: { createObjectURL: () => 'b', revokeObjectURL: () => {} }, Blob: function() {}
         };
