@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RumaPos - Kasir Online untuk UMKM</title>
+<meta name="description" content="RumaPos: aplikasi kasir online untuk UMKM dan toko retail. Stok real-time, QRIS, laporan penjualan, harga terjangkau.">
+<style>
+:root{
+  --primary:#0f5fd6;
+  --primary-dark:#0a47a3;
+  --accent:#12b76a;
+  --bg:#f6f9ff;
+  --text:#1c2333;
+  --muted:#5b6478;
+  --card:#ffffff;
+  --radius:16px;
+  --shadow:0 10px 30px rgba(15,95,214,.10);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--text);background:var(--bg);line-height:1.6}
+.container{width:min(1140px,92%);margin:0 auto}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+.btn{display:inline-block;padding:13px 26px;border-radius:10px;font-weight:600;font-size:1rem;transition:transform .15s ease,box-shadow .15s ease;cursor:pointer;border:0}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 6px 18px rgba(15,95,214,.35)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--primary);border:2px solid var(--primary)}
+.btn-outline:hover{background:var(--primary);color:#fff}
+.btn-whatsapp{background:#25d366;color:#fff;box-shadow:0 6px 18px rgba(37,211,102,.35)}
+.btn-whatsapp:hover{background:#1ebe5a;transform:translateY(-2px)}
+
+/* header */
+header{position:sticky;top:0;z-index:50;background:rgba(246,249,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e3eaf7}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.25rem;color:var(--primary)}
+.logo-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));display:grid;place-items:center;color:#fff;font-size:1.1rem}
+.nav ul{display:flex;gap:26px;list-style:none}
+.nav ul a{color:var(--muted);font-weight:500}
+.nav ul a:hover{color:var(--primary)}
+.nav .btn{padding:10px 20px}
+.burger{display:none;font-size:1.5rem;background:none;border:0;color:var(--primary);cursor:pointer}
+@media(max-width:860px){
+  .nav ul{display:none;position:absolute;top:100%;left:0;right:0;background:var(--card);flex-direction:column;padding:16px;gap:14px;box-shadow:var(--shadow)}
+  .nav.open ul{display:flex}
+  .burger{display:block}
+  .nav .btn{display:none}
+}
+
+/* hero */
+.hero{padding:70px 0 60px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-160px;right:-120px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(15,95,214,.14),transparent 70%)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;position:relative}
+.badge{display:inline-flex;align-items:center;gap:8px;background:#e8f2ff;color:var(--primary-dark);padding:7px 14px;border-radius:999px;font-weight:600;font-size:.85rem;margin-bottom:20px}
+.hero h1{font-size:3.1rem;line-height:1.12;margin-bottom:18px;letter-spacing:-1px}
+.hero h1 span{color:var(--primary)}
+.hero p{font-size:1.12rem;color:var(--muted);margin-bottom:28px;max-width:520px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:34px;margin-top:40px;flex-wrap:wrap}
+.hero-stats div b{display:block;font-size:1.6rem;color:var(--primary)}
+.hero-stats div span{font-size:.85rem;color:var(--muted)}
+.hero-card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:24px;border:1px solid #e8eefb}
+.mock-screen{background:var(--bg);border-radius:12px;padding:16px;border:1px solid #e8eefb}
+.mock-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed #d7e1f5}
+.mock-bar b{color:var(--primary);font-size:.95rem}
+.mock-bar small{color:var(--muted)}
+.mock-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #eef2fa;font-size:.9rem}
+.mock-row:last-child{border:0}
+.mock-row .qty{background:#e8f2ff;color:var(--primary-dark);border-radius:6px;padding:2px 8px;font-size:.8rem;font-weight:600}
+.mock-total{display:flex;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:2px solid #e8eefb;font-weight:700}
+.mock-total span{color:var(--primary)}
+.qris{margin-top:14px;display:flex;align-items:center;gap:12px;background:#f0fdf6;border:1px solid #cdf3e2;border-radius:10px;padding:10px 12px;font-size:.82rem;color:#0b7a44;font-weight:600}
+@media(max-width:860px){
+  .hero{padding:44px 0}
+  .hero-grid{grid-template-columns:1fr;gap:32px}
+  .hero h1{font-size:2.2rem}
+}
+
+/* section umum */
+section{padding:72px 0}
+.sec-head{text-align:center;max-width:640px;margin:0 auto 44px}
+.sec-tag{color:var(--primary);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-size:.8rem}
+.sec-head h2{font-size:2.1rem;margin:10px 0 12px;letter-spacing:-.5px}
+.sec-head p{color:var(--muted)}
+
+/* fitur */
+.features{background:var(--card);border-top:1px solid #e8eefb;border-bottom:1px solid #e8eefb}
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.feature{background:var(--bg);border:1px solid #e8eefb;border-radius:var(--radius);padding:28px;transition:transform .15s ease,box-shadow .15s ease}
+.feature:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.feature .ico{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:1.5rem;margin-bottom:16px;background:#e8f2ff}
+.feature h3{font-size:1.15rem;margin-bottom:8px}
+.feature p{color:var(--muted);font-size:.94rem}
+@media(max-width:900px){.feature-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.feature-grid{grid-template-columns:1fr}}
+
+/* cara kerja */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;position:relative}
+.step{background:var(--card);border:1px solid #e8eefb;border-radius:var(--radius);padding:26px 22px;position:relative}
+.step .num{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700;margin-bottom:14px}
+.step h3{font-size:1.05rem;margin-bottom:6px}
+.step p{color:var(--muted);font-size:.9rem}
+@media(max-width:900px){.steps{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.steps{grid-template-columns:1fr}}
+
+/* harga */
+.pricing{background:var(--card);border-top:1px solid #e8eefb;border-bottom:1px solid #e8eefb}
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start}
+.price{border:1px solid #e8eefb;border-radius:var(--radius);padding:30px 26px;background:var(--bg);position:relative}
+.price.popular{border-color:var(--primary);box-shadow:var(--shadow);background:#fff}
+.price .ribbon{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px}
+.price h3{font-size:1.2rem;margin-bottom:4px}
+.price .desc{color:var(--muted);font-size:.88rem;min-height:40px;margin-bottom:14px}
+.price .amount{font-size:2.3rem;font-weight:800;color:var(--text)}
+.price .amount small{font-size:.85rem;font-weight:500;color:var(--muted)}
+.price ul{list-style:none;margin:20px 0 24px;display:grid;gap:10px}
+.price li{font-size:.92rem;color:var(--muted);display:flex;gap:9px;align-items:flex-start}
+.price li::before{content:"✓";color:var(--accent);font-weight:700;flex:none}
+.price .btn{width:100%;text-align:center}
+.price.popular .btn-primary{background:var(--accent);box-shadow:0 6px 18px rgba(18,183,106,.35)}
+.price.popular .btn-primary:hover{background:#0e9c59}
+@media(max-width:900px){.price-grid{grid-template-columns:1fr}}
+.price-note{text-align:center;color:var(--muted);font-size:.88rem;margin-top:22px}
+
+/* testimoni */
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.testi{background:var(--card);border:1px solid #e8eefb;border-radius:var(--radius);padding:26px}
+.testi .stars{color:#f5a623;margin-bottom:12px;letter-spacing:2px}
+.testi p{color:var(--muted);font-size:.94rem;margin-bottom:16px}
+.testi .who{display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:grid;place-items:center;font-weight:700}
+.who b{display:block;font-size:.92rem}
+.who span{font-size:.82rem;color:var(--muted)}
+@media(max-width:900px){.testi-grid{grid-template-columns:1fr}}
+
+/* CTA */
+.cta-band{background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:#fff;border-radius:24px;padding:52px 40px;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 20px 50px rgba(15,95,214,.3)}
+.cta-band h2{font-size:1.9rem;margin-bottom:8px}
+.cta-band p{opacity:.9;max-width:460px}
+.cta-band .btn-whatsapp{background:#fff;color:var(--primary-dark);box-shadow:none}
+.cta-band .btn-whatsapp:hover{background:#eef4ff;transform:translateY(-2px)}
+@media(max-width:700px){.cta-band{padding:36px 24px;text-align:center}.cta-band .hero-cta{justify-content:center}}
+
+/* footer */
+footer{background:#101728;color:#aeb8cc;padding:52px 0 26px;margin-top:0}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;padding-bottom:32px;border-bottom:1px solid #23304d}
+footer h4{color:#fff;font-size:.95rem;margin-bottom:14px}
+footer ul{list-style:none;display:grid;gap:9px;font-size:.9rem}
+footer a:hover{color:#fff}
+footer .logo{color:#fff;margin-bottom:12px}
+footer .about{font-size:.9rem;max-width:300px}
+.footer-bottom{padding-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:.85rem}
+@media(max-width:800px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.footer-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="nav" id="nav">
+      <a href="#" class="logo"><span class="logo-mark">Rp</span> RumaPos</a>
+      <button class="burger" id="burger" aria-label="Buka menu">☰</button>
+      <ul>
+        <li><a href="#fitur">Fitur</a></li>
+        <li><a href="#cara-kerja">Cara Kerja</a></li>
+        <li><a href="#harga">Harga</a></li>
+        <li><a href="#testimoni">Testimoni</a></li>
+      </ul>
+      <a href="#kontak" class="btn btn-primary">Coba Gratis</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="badge">⚡ Kasir online untuk UMKM Indonesia</span>
+      <h1>Kasirkan Toko Anda <span>Lebih Cepat</span> dengan RumaPos</h1>
+      <p>Aplikasi point of sale yang membantu toko kelontong, warung, dan minimarket mencatat penjualan, pantau stok real-time, dan terima pembayaran QRIS — semua dari satu perangkat.</p>
+      <div class="hero-cta">
+        <a href="#kontak" class="btn btn-primary">Mulai Sekarang</a>
+        <a href="#fitur" class="btn btn-outline">Lihat Fitur</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>1.200+</b><span>Toko terdaftar</span></div>
+        <div><b>&lt;2 detik</b><span>Waktu transaksi</span></div>
+        <div><b>24/7</b><span>Dukungan</span></div>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="mock-screen">
+        <div class="mock-bar">
+          <b>RumaPos — Warung Berkah</b>
+          <small>Shift Amel</small>
+        </div>
+        <div class="mock-row"><span>Indomie Goreng</span><span class="qty">×2</span><span>Rp 6.000</span></div>
+        <div class="mock-row"><span>Teh Botol 350ml</span><span class="qty">×3</span><span>Rp 9.000</span></div>
+        <div class="mock-row"><span>Rokok Filter 12</span><span class="qty">×1</span><span>Rp 28.000</span></div>
+        <div class="mock-row"><span>Permen Susu</span><span class="qty">×5</span><span>Rp 2.500</span></div>
+        <div class="mock-total"><span>Total (4 item)</span><span>Rp 45.500</span></div>
+        <div class="qris">✓ Dibayar via QRIS — stok otomatis berkurang</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FITUR -->
+<section class="features" id="fitur">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-tag">Fitur Unggulan</span>
+      <h2>Semua yang toko Anda butuhkan</h2>
+      <p>Dari kasir hingga laporan laba, RumaPos menangani operasional toko sehari-hari.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="ico">🛒</div>
+        <h3>Kasir Cepat & Offline-Ready</h3>
+        <p>Transaksi dalam hitungan detik. Mode offline tetap jalan saat internet putus, data otomatis tersinkron.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">📦</div>
+        <h3>Stok Real-Time</h3>
+        <p>Stok otomatis berkurang setiap penjualan. Peringatan dini saat barang akan habis, lengkap dengan nilai inventory.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">📲</div>
+        <h3>Pembayaran Digital</h3>
+        <p>Terima QRIS, e-wallet, dan kartu debit. Struk thermal langsung tercetak untuk pelanggan.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🌐</div>
+        <h3>Pemesanan Online</h3>
+        <p>Buka katalog online agar pelanggan pesan dari rumah. Pesanan masuk langsung ke layar kasir Anda.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">📊</div>
+        <h3>Laporan Penjualan</h3>
+        <p>Pantau omzet harian, produk terlaris, dan jam ramai lewat dashboard — di mana pun Anda berada.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">👥</div>
+        <h3>Kasir & Shift</h3>
+        <p>Kelola banyak kasir, atur shift, dan lacak setoran awal/akhir hari dengan akurat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CARA KERJA -->
+<section id="cara-kerja">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-tag">Cara Kerja</span>
+      <h2>Mulai dalam 15 menit</h2>
+      <p>Tanpa instalasi rumit — langsung jualan hari ini juga.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h3>Daftar</h3><p>Buat akun dan masukkan nama toko Anda, gratis tanpa kartu kredit.</p></div>
+      <div class="step"><div class="num">2</div><h3>Input Produk</h3><p>Tambahkan produk dan stok awal, atau impor dari Excel sekali klik.</p></div>
+      <div class="step"><div class="num">3</div><h3>Terima Pembayaran</h3><p>Scan barcode atau pilih item, lalu terima tunai maupun QRIS.</p></div>
+      <div class="step"><div class="num">4</div><h3>Pantau Performa</h3><p>Cek laporan penjualan dan stok kapan saja dari ponsel Anda.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HARGA -->
+<section class="pricing" id="harga">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-tag">Harga</span>
+      <h2>Paket sesuai skala toko</h2>
+      <p>Tanpa biaya tersembunyi. Naik paket kapan saja saat toko tumbuh.</p>
+    </div>
+    <div class="price-grid">
+      <div class="price">
+        <h3>Dasar</h3>
+        <p class="desc">Untuk warung &amp; toko kecil yang baru mulai digital.</p>
+        <div class="amount">Rp 49<small>rb/bln</small></div>
+        <ul>
+          <li>1 toko, 1 kasir</li>
+          <li>Transaksi tanpa batas</li>
+          <li>Manajemen stok dasar</li>
+          <li>Laporan harian</li>
+        </ul>
+        <a href="#kontak" class="btn btn-outline">Pilih Dasar</a>
+      </div>
+      <div class="price popular">
+        <span class="ribbon">Paling Populer</span>
+        <h3>Bisnis</h3>
+        <p class="desc">Untuk toko retail dengan trafik harian tinggi.</p>
+        <div class="amount">Rp 149<small>rb/bln</small></div>
+        <ul>
+          <li>1 toko, kasir tak terbatas</li>
+          <li>Pembayaran QRIS &amp; debit</li>
+          <li>Katalog online &amp; pemesanan</li>
+          <li>Laporan laba-rugi &amp; stok real-time</li>
+          <li>Struk thermal + printer support</li>
+        </ul>
+        <a href="#kontak" class="btn btn-primary">Pilih Bisnis</a>
+      </div>
+      <div class="price">
+        <h3>Multi-Toko</h3>
+        <p class="desc">Untuk jaringan toko dengan banyak cabang.</p>
+        <div class="amount">Rp 349<small>rb/bln</small></div>
+        <ul>
+          <li>Hingga 5 cabang</li>
+          <li>Konsolidasi laporan antar toko</li>
+          <li>Transfer stok antar cabang</li>
+          <li>Manajer &amp; hak akses</li>
+          <li>Dukungan prioritas 24/7</li>
+        </ul>
+        <a href="#kontak" class="btn btn-outline">Pilih Multi-Toko</a>
+      </div>
+    </div>
+    <p class="price-note">Semua paket bebas biaya setup. Hubungi kami untuk diskon tahunan.</p>
+  </div>
+</section>
+
+<!-- TESTIMONI -->
+<section id="testimoni">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-tag">Testimoni</span>
+      <h2>Dipercaya 1.200+ toko</h2>
+      <p>Cerita nyata pemilik UMKM yang berkembang bersama RumaPos.</p>
+    </div>
+    <div class="testi-grid">
+      <div class="testi">
+        <div class="stars">★★★★★</div>
+        <p>"Antrian kasir jauh lebih cepat. Stok otomatis terupdate, jadi nggak perlu lagi hitung manual tiap malam."</p>
+        <div class="who"><div class="avatar">SR</div><div><b>Siti Rahmawati</b><span>Pemilik Warung Berkah, Bandung</span></div></div>
+      </div>
+      <div class="testi">
+        <div class="stars">★★★★★</div>
+        <p>"QRIS bikin pelanggan muda betah belanja. Laporan penjualan dari HP bikin saya tahu produk mana yang harus ditambah stok."</p>
+        <div class="who"><div class="avatar">BH</div><div><b>Budi Hartono</b><span>Pemilik Toko Kelontong Maju, Surabaya</span></div></div>
+      </div>
+      <div class="testi">
+        <div class="stars">★★★★★</div>
+        <p>"Pakai RumaPos cuma 15 menit sudah jalan. Setup-nya gampang banget, tim supportnya selalu sigap bantuan."</p>
+        <div class="who"><div class="avatar">DA</div><div><b>Dewi Anggraini</b><span>Manager Minimarket Sejahtera, Yogyakarta</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / KONTAK -->
+<section id="kontak">
+  <div class="container">
+    <div class="cta-band">
+      <div>
+        <h2>Siap kasirkan toko Anda?</h2>
+        <p>Coba RumaPos gratis sekarang. Konsultasi dengan tim kami untuk pilih paket yang pas untuk toko Anda.</p>
+      </div>
+      <div class="hero-cta">
+        <a href="https://wa.me/6281234567890?text=Halo%20RumaPos%2C%20saya%20ingin%20coba%20aplikasi%20kasirnya" target="_blank" rel="noopener" class="btn btn-whatsapp">💬 Chat WhatsApp</a>
+        <a href="index.html" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.6)">Lihat Demo Kasir</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="logo"><span class="logo-mark">Rp</span> RumaPos</div>
+        <p class="about">Aplikasi kasir online untuk UMKM Indonesia. Cepat, andal, dan terjangkau untuk setiap toko.</p>
+      </div>
+      <div>
+        <h4>Produk</h4>
+        <ul>
+          <li><a href="#fitur">Fitur</a></li>
+          <li><a href="#harga">Harga</a></li>
+          <li><a href="index.html">Demo Kasir</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Perusahaan</h4>
+        <ul>
+          <li><a href="#testimoni">Testimoni</a></li>
+          <li><a href="#kontak">Kontak</a></li>
+          <li><a href="#cara-kerja">Cara Kerja</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Kontak</h4>
+        <ul>
+          <li>WhatsApp: 0812-3456-7890</li>
+          <li>Email: halo@rumapos.id</li>
+          <li>Senin–Sabtu, 08:00–21:00 WIB</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 RumaPos. Semua hak dilindungi.</span>
+      <span>Dibuat untuk UMKM Indonesia 🇮🇩</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('burger').addEventListener('click',function(){
+  document.getElementById('nav').classList.toggle('open');
+});
+document.querySelectorAll('#nav ul a').forEach(function(a){
+  a.addEventListener('click',function(){
+    document.getElementById('nav').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

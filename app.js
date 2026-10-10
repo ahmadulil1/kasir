@@ -13,6 +13,8 @@ db.pendingSales ||= [];
 db.cart ||= [];
 db.sales ||= [];
 db.products ||= [];
+db.trash ||= [];
+db.backups ||= [];
 db.pinO ||= '1234';
 db.pinC ||= '0000';
 db.discType ||= 'nominal';
@@ -49,16 +51,21 @@ window.login = async () => {
     $('auth').style.opacity = '0.5'; // loading state
 
     try {
+        let found = false;
         if(window.fdb && navigator.onLine) {
-            let snap = await window.fget(window.fdoc(window.fdb, "users", p));
-            if(snap.exists()) {
-                let u = snap.data();
-                role = u.role;
-                db.tokoId = u.tokoId;
-                save(); // update local toko
-            } else throw 'invalid';
-        } else {
-            // Fallback offline (pakai pin yang diset admin sebelumnya)
+            try {
+                let snap = await window.fget(window.fdoc(window.fdb, "users", p));
+                if(snap.exists()) {
+                    let u = snap.data();
+                    role = u.role;
+                    db.tokoId = u.tokoId;
+                    save();
+                    found = true;
+                }
+            } catch(netErr) { console.error('Firebase tidak terjangkau, pakai PIN lokal', netErr); }
+        }
+        if(!found) {
+            // Fallback: PIN lokal di HP ini
             if(p === db.pinO) role = 'owner';
             else if(p === db.pinC) role = 'cashier';
             else throw 'invalid';
@@ -144,8 +151,8 @@ const clean = (value, max = 80) => String(value).trim().replace(/[<>]/g, '').sli
 window.rp = rp; window.clean = clean;
 
 window.show = t => {
-    ['kasir','stok','lap'].forEach(x => { $('tab-'+x).classList.toggle('on', x===t); $(x).classList.toggle('on', x===t); });
-    if(t==='stok') { renderP(); renderLog(); } if(t==='lap') renderS();
+    ['kasir','stok','lap','data'].forEach(x => { $('tab-'+x).classList.toggle('on', x===t); $(x).classList.toggle('on', x===t); });
+    if(t==='stok') { renderP(); renderLog(); } if(t==='lap') renderS(); if(t==='data') { renderBackups(); renderTrash(); }
 };
 
 let editIdx = null;
@@ -153,6 +160,82 @@ let editIdx = null;
 const logStock = (p, perubahan, alasan) => {
     db.stockLog ||= [];
     db.stockLog.unshift({ id: p.id, n: p.n, qty: perubahan, alasan, t: new Date().toLocaleString('id-ID') });
+};
+
+// --- Backup & Sampah ---
+const autoBackup = label => {
+    db.backups.unshift({ label, t: new Date().toLocaleString('id-ID'), data: JSON.stringify({ products: db.products, sales: db.sales, stockLog: db.stockLog || [] }) });
+    db.backups = db.backups.slice(0, 20); // maks 20 backup
+    save();
+};
+
+const moveToTrash = (type, data, alasan) => {
+    db.trash.unshift({ type, data, alasan, t: new Date().toLocaleString('id-ID') });
+    db.trash = db.trash.slice(0, 100);
+    save();
+};
+
+window.makeBackup = () => {
+    autoBackup('Manual oleh ' + (activePin || 'pemilik'));
+    renderBackups();
+    alert('Backup dibuat.');
+};
+
+window.renderBackups = () => {
+    let el = $('blist');
+    if(!el) return;
+    el.innerHTML = db.backups.map((b, i) =>
+        `<li><span class="big">${b.label}<span class="tag">${b.t} · ${JSON.parse(b.data).products.length} produk · ${JSON.parse(b.data).sales.length} transaksi</span></span>
+         <span style="display:flex;gap:6px">
+           <button onclick="restoreBackup(${i})" style="background:var(--g)">↩</button>
+           <button onclick="delBackup(${i})" style="background:var(--r)">🗑</button>
+         </span></li>`).join('') || '<div class="empty">Belum ada backup.</div>';
+};
+
+window.restoreBackup = i => {
+    let b = db.backups[i];
+    if(!b) return;
+    if(!confirm(`Pulihkan backup "${b.label}" (${b.t})?\nData sekarang akan dibackup dulu.`)) return;
+    autoBackup('Sebelum restore ' + b.label);
+    let d = JSON.parse(b.data);
+    db.products = d.products; db.sales = d.sales; db.stockLog = d.stockLog || [];
+    save(); render(); renderP(); renderS(); renderBackups();
+    alert('Backup dipulihkan.');
+};
+
+window.delBackup = i => {
+    if(confirm('Hapus backup ini permanen?')) { db.backups.splice(i, 1); save(); renderBackups(); }
+};
+
+window.renderTrash = () => {
+    let el = $('tlist');
+    if(!el) return;
+    el.innerHTML = db.trash.map((x, i) =>
+        `<li><span class="big">${x.type === 'produk' ? '📦' : '🧾'} ${x.type === 'produk' ? x.data.n : (x.data.no || 'Transaksi')}<span class="tag">${x.t} · ${x.alasan}</span></span>
+         <span style="display:flex;gap:6px">
+           <button onclick="restoreTrash(${i})" style="background:var(--g)">↩</button>
+           <button onclick="delTrashPerm(${i})" style="background:var(--r)">🗑</button>
+         </span></li>`).join('') || '<div class="empty">Sampah kosong.</div>';
+};
+
+window.restoreTrash = i => {
+    let x = db.trash[i];
+    if(!x) return;
+    if(x.type === 'produk') db.products.push(x.data);
+    else db.sales.unshift(x.data);
+    db.trash.splice(i, 1);
+    save(); renderTrash(); renderP(); renderS();
+    alert('Dipulihkan dari sampah.');
+};
+
+window.delTrashPerm = i => {
+    if(!confirm('Hapus permanen? Tidak bisa dikembalikan.')) return;
+    db.trash.splice(i, 1); save(); renderTrash();
+};
+
+window.emptyTrash = () => {
+    if(!confirm('Kosongkan seluruh sampah?')) return;
+    db.trash = []; save(); renderTrash();
 };
 
 window.adjustStock = i => {
@@ -205,7 +288,10 @@ window.editProd = i => {
 };
 
 window.delProd = i => {
+    let p = db.products[i];
+    if(!confirm(`Hapus produk "${p.n}"? Masuk sampah, bisa dipulihkan.`)) return;
     if(editIdx === i) { editIdx = null; $('addbtn').textContent = 'Simpan Produk'; $('stokh').textContent = '➕ Tambah Produk'; }
+    moveToTrash('produk', p, 'Dihapus oleh ' + (activePin || 'pemilik'));
     db.products.splice(i, 1); save(); renderP();
 };
 
@@ -313,6 +399,7 @@ window.pay = () => {
     db.pendingSales.push(sale);
     syncPending();
     syncBadge();
+    autoBackup('Transaksi ' + no);
 
     db.cart = []; db.discVal = 0; if($('disc-val')) $('disc-val').value = '';
     save(); render(); chgPay();
@@ -441,7 +528,11 @@ window.exportSalesCSV = () => {
     a.click();
 };
 
-window.clearSales = () => { if(confirm('Hapus semua riwayat?')) { db.sales = []; save(); renderS(); } };
+window.clearSales = () => {
+    if(!confirm('Hapus semua riwayat? Masuk sampah, bisa dipulihkan.')) return;
+    db.sales.forEach(s => moveToTrash('transaksi', s, 'Reset riwayat'));
+    db.sales = []; save(); renderS();
+};
 
 // --- Produk CSV ---
 window.exportCSV = () => {
@@ -549,6 +640,28 @@ if(readLS('tema') === 'dark') {
 }
 
 window.setLow = v => { db.lowStock = Number(v) || 5; save(); };
+
+window.resetData = level => {
+    let labels = {
+        cart: 'Keranjang',
+        sales: 'Riwayat transaksi lokal',
+        products: 'Produk & stok',
+        all: 'SEMUA DATA APLIKASI'
+    };
+    if(!confirm(`Reset ${labels[level]}? Backup otomatis dibuat dulu.`)) return;
+    let pin = prompt('Masukkan PIN pemilik:');
+    if(pin !== db.pinO) return alert('PIN salah. Reset dibatalkan.');
+    let konf = prompt(`Ketik RESET untuk konfirmasi (${labels[level]}):`);
+    if(konf !== 'RESET') return alert('Konfirmasi salah. Reset dibatalkan.');
+    
+    autoBackup('Sebelum reset ' + labels[level]);
+    if(level === 'cart') { db.cart.forEach(c => { let p = db.products.find(x => x.n === c.n); if(p) p.q += c.qty; }); db.cart = []; }
+    if(level === 'sales') { db.sales = []; }
+    if(level === 'products') { db.products.forEach(p => moveToTrash('produk', p, 'Reset produk')); db.products = []; db.stockLog = []; }
+    if(level === 'all') { db.products = []; db.sales = []; db.cart = []; db.stockLog = []; db.pendingSales = []; }
+    save(); render(); renderP(); renderS();
+    alert(labels[level] + ' direset.');
+};
 
 window.savePin = () => {
     let o = $('pin-o').value, c = $('pin-c').value;
