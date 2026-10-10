@@ -1,4 +1,4 @@
-const CACHE = 'kasir-v26';
+const CACHE = 'kasir-v27';
 const FILES = ['./', './index.html', './app.js', './manifest.json', './icon.svg', 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/barcodes/JsBarcode.code128.min.js'];
 
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))));

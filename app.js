@@ -21,6 +21,22 @@ db.discType ||= 'nominal';
 db.discVal ||= 0;
 if(!db.tokoId) { db.tokoId = 'TOKO_' + Math.floor(Math.random()*9000+1000); save(); }
 
+// Produk contoh untuk demo
+if(!db.seeded) {
+    const svg = (emoji, bg) => 'data:image/svg+xml,' + encodeURIComponent(
+        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='${bg}'/><text x='50' y='58' font-size='46' text-anchor='middle'>${emoji}</text></svg>`);
+    db.products = [
+        { id: 'P_SEED1', n: 'Indomie Goreng', p: 3500, q: 24, c: '8992388101010', cat: 'Makanan', img: svg('🍜', '#fef3c7') },
+        { id: 'P_SEED2', n: 'Aqua 600ml', p: 4000, q: 30, c: '8996001306015', cat: 'Minuman', img: svg('💧', '#dbeafe') },
+        { id: 'P_SEED3', n: 'Teh Botol 350ml', p: 5000, q: 18, c: '', cat: 'Minuman', img: svg('🍵', '#d1fae5') },
+        { id: 'P_SEED4', n: 'Kopi Sachet', p: 2500, q: 40, c: '', cat: 'Makanan', img: svg('☕', '#f3e8d2') },
+        { id: 'P_SEED5', n: 'Beras 5kg', p: 75000, q: 10, c: '', cat: 'Sembako', img: svg('🍚', '#fef9c3') },
+        { id: 'P_SEED6', n: 'Minyak Goreng 1L', p: 18000, q: 12, c: '', cat: 'Sembako', img: svg('🛢️', '#e0e7ff') }
+    ];
+    db.seeded = true;
+    save();
+}
+
 // Migrasi: produk lama tanpa ID unik
 db.products.forEach(p => { if(!p.id) p.id = 'P' + Date.now() + Math.floor(Math.random()*1000); });
 db.lowStock ||= 5;
@@ -266,22 +282,28 @@ window.renderP = () => {
 
 window.addProd = () => {
     let n = clean($('sn').value), p = Number($('sp').value), q = Number($('sq').value), c = clean($('sc').value, 40);
+    let cat = $('pcat').value;
     if(!n || !Number.isSafeInteger(p) || p <= 0 || !Number.isSafeInteger(q) || q < 0) return alert('Nama, harga, atau stok tidak valid');
     if(c && db.products.some((x, i) => x.c === c && i !== editIdx)) return alert('Barcode sudah dipakai produk lain');
     if(editIdx !== null) {
-        db.products[editIdx] = { n, p, q, c };
+        db.products[editIdx] = { ...db.products[editIdx], n, p, q, c, cat, img: imgBuf || db.products[editIdx].img };
         editIdx = null;
         $('addbtn').textContent = 'Simpan Produk';
         $('stokh').textContent = '➕ Tambah Produk';
-    } else db.products.push({ n, p, q, c });
+    } else db.products.push({ id: 'P' + Date.now() + Math.floor(Math.random()*1000), n, p, q, c, cat, img: imgBuf });
+    imgBuf = '';
+    $('pimg-prev').style.display = 'none';
     save(); ['sn','sp','sq','sc'].forEach(i => $(i).value = '');
-    renderP();
+    renderP(); renderGrid();
 };
 
 window.editProd = i => {
     let p = db.products[i];
     editIdx = i;
     $('sn').value = p.n; $('sp').value = p.p; $('sq').value = p.q; $('sc').value = p.c || '';
+    if($('pcat')) $('pcat').value = p.cat || 'Lainnya';
+    if(p.img) { $('pimg-prev').src = p.img; $('pimg-prev').style.display = 'block'; } else $('pimg-prev').style.display = 'none';
+    imgBuf = '';
     $('addbtn').textContent = '💾 Update Produk';
     $('stokh').textContent = '✏️ Edit Produk';
     $('sn').focus();
@@ -310,30 +332,72 @@ window.printBarcode = i => {
     $('printbar').style.display = 'none';
 };
 
-window.pick = () => {
-    let s = $('pilih');
-    s.style.display = s.style.display === 'none' ? 'block' : 'none';
-    renderPick();
+const CATS = ['Semua', 'Makanan', 'Minuman', 'Sembako', 'Lainnya'];
+let catFilter = 'Semua', imgBuf = '';
+
+window.pickCat = c => { catFilter = c; renderGrid(); };
+
+window.renderGrid = () => {
+    let chips = $('chips');
+    if(chips && !chips.dataset.done) {
+        chips.innerHTML = CATS.map(c => `<button class="${c===catFilter?'on':''}" onclick="pickCat('${c}')">${c}</button>`).join('');
+        chips.dataset.done = '1';
+    } else if(chips) {
+        [...chips.children].forEach(b => b.classList.toggle('on', b.textContent === catFilter));
+    }
+    let q = (searchQ || '').toLowerCase();
+    let list = db.products.filter(p =>
+        (!q || p.n.toLowerCase().includes(q) || (p.c || '').includes(searchQ)) &&
+        (catFilter === 'Semua' || p.cat === catFilter));
+    $('grid').innerHTML = list.map(p => {
+        let inCart = db.cart.find(c => c.n === p.n);
+        return `<div class="pcard ${p.q <= 0 ? 'out' : ''}" onclick="tapProduct('${p.id}')">
+            ${inCart ? `<span class="pbadge">${inCart.qty}</span>` : ''}
+            <img src="${p.img || 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><rect width=\'100\' height=\'100\' fill=\'#e5e7eb\'/><text x=\'50\' y=\'55\' font-size=\'30\' text-anchor=\'middle\'>📦</text></svg>')}" alt="${p.n}">
+            <div class="pn">${p.n}</div>
+            <div class="pp">Rp${rp(p.p)}</div>
+            <div class="pq">${p.q > 0 ? 'Stok ' + p.q : 'HABIS'}</div>
+        </div>`;
+    }).join('') || '<div class="empty" style="grid-column:1/-1">Produk tidak ditemukan.</div>';
 };
 
-const renderPick = () => {
-    let q = (searchQ || '').toLowerCase();
-    let list = db.products.filter(p => !q || p.n.toLowerCase().includes(q));
-    $('pilih').innerHTML = '<option value="">Pilih produk...</option>' +
-        list.map(p => `<option value="${p.id}">${p.n} - Rp${rp(p.p)}${p.q <= 0 ? ' (habis)' : ''}</option>`).join('');
+window.tapProduct = id => {
+    let p = db.products.find(x => x.id === id);
+    if(p) addToCart(p);
+};
+
+const compress = file => new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = c.height = 400;
+            const ctx = c.getContext('2d');
+            let s = Math.min(img.width, img.height);
+            ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 400, 400);
+            res(c.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = () => res('');
+        img.src = r.result;
+    };
+    r.onerror = () => res('');
+    r.readAsDataURL(file);
+});
+
+window.addPhoto = async inp => {
+    let f = inp.files[0];
+    if(!f) return;
+    imgBuf = await compress(f);
+    let prev = $('pimg-prev');
+    prev.src = imgBuf;
+    prev.style.display = 'block';
+    inp.value = '';
 };
 
 window.searchProd = () => {
     searchQ = $('pq').value;
-    renderPick();
-    if($('stokh') && db.products.length) renderP();
-};
-
-window.addPick = () => {
-    let id = $('pilih').value;
-    let p = db.products.find(x => x.id === id);
-    if(p) addToCart(p);
-    $('pilih').value = '';
+    renderGrid();
 };
 
 const addToCart = p => {
@@ -341,7 +405,7 @@ const addToCart = p => {
     let c = db.cart.find(i => i.n === p.n);
     if(c) c.qty++; else db.cart.push({ n: p.n, p: p.p, qty: 1 });
     p.q--;
-    save(); render();
+    save(); render(); renderGrid();
 };
 
 window.inc = x => {
@@ -624,6 +688,7 @@ const matchCode = code => {
 
 render();
 syncBadge();
+renderGrid();
 
 // ponytail: expose untuk testing (test.js), bukan untuk UI
 window.grandTotal = grandTotal; window.nextNo = nextNo; window.db = db;

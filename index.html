@@ -61,6 +61,22 @@
     #scan button { border-radius: 0; background: var(--r); font-size: 18px; padding: 18px; }
     #printbar { display: none; }
     .fab { position: fixed; right: 16px; bottom: 86px; width: 56px; height: 56px; border-radius: 50%; font-size: 24px; padding: 0; background: var(--b); z-index: 5; box-shadow: 0 6px 16px rgba(14,165,233,.5); }
+
+    /* --- Katalog grid --- */
+    #grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pcard { background: var(--card); border-radius: 14px; padding: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.06); cursor: pointer; position: relative; transition: transform .1s; border: 2px solid transparent; }
+    .pcard:active { transform: scale(.96); }
+    .pcard.out { opacity: .45; cursor: not-allowed; }
+    .pcard.sel { border-color: var(--v); }
+    .pcard img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; background: #f1f1f1; }
+    .pcard .pn { font-weight: 700; font-size: 13px; margin-top: 6px; line-height: 1.2; }
+    .pcard .pp { font-weight: 800; color: var(--v); font-size: 14px; }
+    .pcard .pq { font-size: 11px; color: var(--mut); }
+    .pbadge { position: absolute; top: -6px; right: -6px; background: var(--v); color: #fff; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .chips button { flex: none; background: #e0e0e0; color: #333; padding: 8px 14px; font-size: 13px; border-radius: 20px; box-shadow: none; }
+    .chips button.on { background: var(--v); color: #fff; }
+    @media (min-width: 768px) { #grid { grid-template-columns: repeat(4, 1fr); } }
     @media print {
       body * { visibility: hidden; }
       #struk, #struk *, #printbar, #printbar * { visibility: visible; }
@@ -91,12 +107,10 @@
 
   <main id="app" style="display:none">
     <div class="tab on" id="kasir">
-      <div class="row">
-        <button class="b" onclick="scan()">📷 Scan</button>
-        <button class="s" onclick="pick()">☰ Pilih</button>
-      </div>
-      <input id="pq" placeholder="🔍 Cari produk..." oninput="searchProd()">
-      <select id="pilih" onchange="addPick()" style="display:none"></select>
+      <button class="b" onclick="scan()">📷 Scan</button>
+      <input id="pq" placeholder="🔍 Cari produk..." oninput="searchProd()" style="margin:0">
+      <div class="chips" id="chips"></div>
+      <div id="grid"></div>
       <div class="card" id="struk">
         <h3>🧺 Keranjang</h3>
         <ul id="list"></ul>
@@ -150,6 +164,19 @@
         <input id="sq" type="number" placeholder="Jumlah Stok">
         <label for="sc">Kode Barcode (opsional)</label>
         <input id="sc" placeholder="Kode Barcode (opsional)">
+        <label>Kategori</label>
+        <select id="pcat">
+          <option value="Lainnya">Lainnya</option>
+          <option value="Makanan">Makanan</option>
+          <option value="Minuman">Minuman</option>
+          <option value="Sembako">Sembako</option>
+        </select>
+        <label>Foto Produk</label>
+        <div class="row">
+          <button class="s" onclick="$('pimg').click()">📷 Ambil Foto</button>
+          <img id="pimg-prev" style="width:70px;height:70px;object-fit:cover;border-radius:10px;display:none">
+        </div>
+        <input type="file" id="pimg" accept="image/*" capture="environment" style="display:none" onchange="addPhoto(this)">
         <button id="addbtn" onclick="addProd()">Simpan Produk</button>
       </div>
       <div class="card">

@@ -19,7 +19,7 @@ function loadApp(store) {
         },
         document: {
             body: { classList: { toggle: () => false, add: () => {} } },
-            getElementById: () => ({ style: {}, textContent: '', value: '', innerHTML: '', classList: { toggle: () => {}, add: () => {}, remove: () => {} } }),
+            getElementById: () => ({ style: {}, textContent: '', value: '', innerHTML: '', dataset: {}, classList: { toggle: () => {}, add: () => {}, remove: () => {} }, appendChild: () => {}, getContext: () => ({ drawImage: () => {} }), toDataURL: () => 'data:image/jpeg;base64,x' }),
             addEventListener: () => {},
             createElement: () => ({ style: {}, click: () => {} })
         },
