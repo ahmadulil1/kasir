@@ -892,6 +892,23 @@ window.renderLog = () => {
          || '<div class="empty">Belum ada perubahan stok.</div>';
 };
 
+// ponytail: alert() memblokir scan berturut; toast non-modal (upgrade: antrian toast kalau banyak sekaligus)
+let toastTimer;
+window.toast = (msg, ok = true) => {
+    let t = $('rp-toast');
+    if(!t) {
+        t = document.createElement('div');
+        t.id = 'rp-toast';
+        t.style.cssText = 'position:fixed;bottom:190px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 20px;border-radius:12px;font-weight:700;font-size:14px;color:#fff;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.background = ok ? 'var(--v)' : 'var(--r)';
+    t.style.opacity = '1';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.style.opacity = '0', 1300);
+};
+
 let scanBuf = '', scanTimer;
 window.addEventListener('keypress', e => {
     if(e.target.tagName === 'INPUT' && e.target.id !== 'sc') return;
@@ -932,8 +949,8 @@ window.stopScan = () => {
 
 const matchCode = code => {
     let p = db.products.find(x => x.c === code);
-    if(p) { addToCart(p); show('kasir'); alert('Ditambahkan: ' + p.n); }
-    else alert('Barang tidak ditemukan untuk kode: ' + code);
+    if(p) { addToCart(p); show('kasir'); toast('✓ ' + p.n); }
+    else toast('✗ Kode tidak dikenal: ' + code, false);
 };
 
 render();
@@ -943,12 +960,18 @@ syncBadge();
 renderGrid();
 
 // Auto-login jika sesi PIN belum kedaluwarsa (login sekali, minta PIN jika idle > IDLE_MS)
-const checkSavedSession = () => {
+const checkSavedSession = async () => {
     let savedPin = readLS('rp_last_pin');
     let lastTs = Number(readLS('rp_last_ts')) || 0;
-    if(savedPin && (Date.now() - lastTs < IDLE_MS)) {
+    if(!savedPin || Date.now() - lastTs >= IDLE_MS) return;
+    // ponytail: validasi PIN dulu (lokal atau cloud) supaya PIN kadaluwarsa tidak memunculkan alert "PIN Salah"
+    let valid = savedPin === db.pinO || savedPin === db.pinC;
+    if(!valid && window.fdb && navigator.onLine) {
+        try { valid = (await window.fget(window.fdoc(window.fdb, "users", savedPin))).exists(); } catch(e) {}
+    }
+    if(valid) {
         if($('pin')) $('pin').value = savedPin;
-        login();
+        login().catch(e => console.error('Auto-login gagal', e));
     }
 };
 checkSavedSession();

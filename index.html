@@ -187,7 +187,7 @@
   <main id="auth">
     <div class="card" style="margin-top:20vh;text-align:center">
       <h2 style="margin-top:0">Masuk</h2>
-      <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan PIN" style="text-align:center;letter-spacing:10px;font-size:24px">
+      <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Masukkan PIN" style="text-align:center;letter-spacing:10px;font-size:24px" oninput="this.value=this.value.replace(/\D/g,'')">
       <button onclick="login()">Masuk</button>
       <div style="margin-top:15px;font-size:13px;color:var(--mut)">Gunakan PIN yang diberikan pengelola.</div>
     </div>
