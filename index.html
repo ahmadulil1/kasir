@@ -10,9 +10,61 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     :root { --v:#6d28d9; --v2:#7c3aed; --g:#10b981; --r:#ef4444; --b:#0ea5e9; --bg:#f3f4f6; --card:#fff; --ink:#1f2937; --mut:#6b7280; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--ink); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    header { background: linear-gradient(135deg, var(--v), var(--v2)); color: #fff; padding: 18px 16px 22px; border-radius: 0 0 24px 24px; box-shadow: 0 4px 14px rgba(109,40,217,.35); }
-    header h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
-    header small { opacity: .85; font-size: 12px; }
+    /* --- Header Modern --- */
+    header { background: linear-gradient(135deg, #4c1d95, #6d28d9); color: #fff; padding: 12px 16px; border-radius: 0 0 18px 18px; box-shadow: 0 4px 14px rgba(76,29,149,.25); }
+    .hdr-wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .hdr-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .hdr-logo { width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 17px; color: #fff; border: 1px solid rgba(255,255,255,.25); flex-shrink: 0; }
+    .hdr-titles { min-width: 0; line-height: 1.2; }
+    .hdr-titles h1 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.2px; }
+    .hdr-sub { font-size: 11px; opacity: .85; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+    .hdr-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .badge-role { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: rgba(16,185,129,.35); color: #fff; border: 1px solid rgba(255,255,255,.2); letter-spacing: .2px; }
+    .badge-sync { font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 12px; background: rgba(255,255,255,.18); color: #fff; }
+    .btn-theme { width: 34px; height: 34px; border-radius: 10px; padding: 0; font-size: 16px; background: rgba(255,255,255,.18); color: #fff; display: flex; align-items: center; justify-content: center; border: none; box-shadow: none; min-height: unset; cursor: pointer; }
+    .btn-theme:active { transform: scale(.92); }
+    .hdr-logo { overflow: hidden; }
+    .hdr-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* --- Sidebar Drawer --- */
+    #drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; max-width: 84vw; background: var(--card); z-index: 31; transform: translateX(-105%); transition: transform .22s ease; display: flex; flex-direction: column; box-shadow: 4px 0 24px rgba(0,0,0,.25); }
+    #drawer.on { transform: none; }
+    #drawer-back { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 30; display: none; }
+    #drawer-back.on { display: block; }
+    .dprof { padding: 18px 16px; background: linear-gradient(135deg, #4c1d95, #6d28d9); color: #fff; display: flex; align-items: center; gap: 12px; }
+    .dprof .hdr-logo { width: 44px; height: 44px; font-size: 20px; background: rgba(255,255,255,.2); }
+    .dprof b { display: block; font-size: 15px; }
+    .dprof small { opacity: .85; font-size: 11px; }
+    .dnav { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .dnav button { display: flex; align-items: center; gap: 12px; text-align: left; padding: 13px 14px; font-size: 15px; background: transparent; color: var(--ink); box-shadow: none; border-radius: 12px; width: 100%; }
+    .dnav button.on { background: rgba(109,40,217,.12); color: var(--v); font-weight: 700; }
+    .dnav button.exit { color: var(--r); margin-top: 6px; }
+    body.dark .dnav button.exit { color: #f87171; }
+
+    /* --- Modal Preview Nota --- */
+    .nota-modal { position: fixed; inset: 0; z-index: 40; display: none; background: rgba(0,0,0,.55); align-items: center; justify-content: center; padding: 16px; }
+    .nota-modal.on { display: flex; }
+    .nota-paper { background: #fff; border-radius: 10px; max-height: 82vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,.4); -webkit-overflow-scrolling: touch; }
+    .nota-actions { position: sticky; bottom: 0; background: #fff; border-top: 1px dashed #ccc; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .nota-actions button { padding: 12px; font-size: 14px; }
+
+    /* --- Pagination stok --- */
+    .pager { display: none; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
+    .pager button { width: auto; padding: 9px 18px; font-size: 14px; }
+    .pager button:disabled { opacity: .4; transform: none; }
+
+    /* --- Sticky Header Search & Kategori --- */
+    .pos-sticky-head { position: sticky; top: -16px; z-index: 8; background: var(--bg); padding: 4px 0 2px; }
+    body.dark .pos-sticky-head { background: var(--bg); }
+
+    /* --- Search & Scan Terpadu --- */
+    .pos-search-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+    .search-input-box { flex: 1; position: relative; display: flex; align-items: center; }
+    .search-input-box .search-icon { position: absolute; left: 12px; font-size: 14px; color: var(--mut); pointer-events: none; }
+    .search-input-box input { margin: 0; padding: 10px 12px 10px 36px; font-size: 14px; border-radius: 12px; min-height: 42px; border: 1.5px solid #e5e7eb; background: var(--card); }
+    .btn-scan-act { width: auto; flex-shrink: 0; padding: 0 16px; min-height: 42px; font-size: 13px; font-weight: 700; border-radius: 12px; background: var(--b); color: #fff; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(14,165,233,.25); border: none; cursor: pointer; }
+    .btn-scan-act:active { transform: scale(.95); }
+
     main { flex-grow: 1; overflow-y: auto; padding: 16px; padding-bottom: 86px; }
     .tab { display: none; flex-direction: column; gap: 12px; }
     .tab.on { display: flex; animation: fade .25s ease; }
@@ -39,31 +91,33 @@
     body.dark li { border-color:#332e45; }
     body.dark nav { background:#211d2e; }
     body.dark hr { border-color:#332e45 !important; }
-    nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; box-shadow: 0 -2px 12px rgba(0,0,0,.08); padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); z-index: 5; }
-    nav button { flex: 1; background: transparent; color: var(--mut); box-shadow: none; padding: 10px 4px; font-size: 13px; font-weight: 600; border-radius: 12px; min-height: 44px; }
-    nav button.on { background: linear-gradient(135deg, var(--v), var(--v2)); color: #fff; }
     button, input, select, li button { min-height: 44px; }
     label { font-size: 13px; color: var(--mut); font-weight: 600; display: block; margin-bottom: 4px; }
     input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--b); outline-offset: 2px; }
 
-    @media (max-width: 767px) {
-      .pos-right { position: sticky; bottom: 78px; max-height: 52vh; overflow-y: auto; background: var(--bg); padding: 8px; border-radius: 16px; z-index: 4; }
-      .pos-right .card { padding: 10px; }
-      .pos-right button { padding: 12px; }
-    }
-
     /* --- Layout POS 2 panel --- */
     .pos-wrap { display: flex; flex-direction: column; gap: 12px; }
-    .pos-right { display: flex; flex-direction: column; gap: 12px; }
+    .pos-right { flex-direction: column; gap: 12px; }
 
+    @media (max-width: 767px) {
+      .pos-left { padding-bottom: 92px; }
+      .cart-fab { display: flex !important; align-items: center; justify-content: space-between; position: fixed; bottom: calc(12px + env(safe-area-inset-bottom)); left: 10px; right: 10px; width: calc(100% - 20px) !important; z-index: 6; box-shadow: 0 4px 16px rgba(16,185,129,.45); border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 700; min-height: 48px; margin: 0; }
+      .cart-fab-tot { font-weight: 800; font-size: 15px; }
+      .pos-right { display: none; position: fixed; inset: 0; z-index: 20; overflow-y: auto; background: var(--bg); padding: 16px; padding-bottom: 100px; }
+      .pos-right.open { display: flex; }
+      .back-btn { display: block; }
+    }
     @media (min-width: 768px) {
       body { max-width: 1100px; margin: 0 auto; }
       main { padding-bottom: 96px; }
+      .cart-fab { display: none; }
+      .back-btn { display: none; }
       .pos-wrap { flex-direction: row; align-items: flex-start; }
       .pos-left { flex: 1.5; min-width: 0; }
-      .pos-right { flex: 1; position: sticky; top: 16px; max-height: calc(100vh - 130px); overflow-y: auto; }
+      .pos-right { display: flex; flex: 1; position: sticky; top: 16px; max-height: calc(100vh - 130px); overflow-y: auto; }
       #grid { grid-template-columns: repeat(3, 1fr); }
     }
+    @media (min-width: 1100px) { #drawer { left: calc((100vw - 1100px) / 2); } }
     #scan { position: fixed; inset: 0; background: #000; z-index: 9; display: none; flex-direction: column; }
     #scan.on { display: flex; }
     #scan video { flex-grow: 1; width: 100%; object-fit: cover; }
@@ -82,33 +136,58 @@
     .pcard .pp { font-weight: 800; color: var(--v); font-size: 14px; }
     .pcard .pq { font-size: 11px; color: var(--mut); }
     .pbadge { position: absolute; top: -6px; right: -6px; background: var(--v); color: #fff; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
-    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-    .chips button { flex: none; background: #e0e0e0; color: #333; padding: 8px 14px; font-size: 13px; border-radius: 20px; box-shadow: none; }
-    .chips button.on { background: var(--v); color: #fff; }
+    .chips { display: flex; flex-direction: row; flex-wrap: nowrap; gap: 6px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin-bottom: 6px; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chips button { width: auto !important; flex: 0 0 auto !important; white-space: nowrap; background: #e5e7eb; color: var(--ink); padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 20px; box-shadow: none; min-height: 32px; height: 32px; border: none; }
+    .chips button.on { background: var(--v); color: #fff; box-shadow: 0 2px 6px rgba(109,40,217,.3); }
+    .chips button.add { background: var(--b); color: #fff; }
+    body.dark .chips button { background: #2d283e; color: #d1d5db; }
+    body.dark .chips button.on { background: var(--v); color: #fff; }
     @media (min-width: 768px) { #grid { grid-template-columns: repeat(3, 1fr); } }
     @media print {
       body * { visibility: hidden; }
-      #struk, #struk *, #printbar, #printbar * { visibility: visible; }
-      #struk, #printbar { position: absolute; left: 0; top: 0; width: 100%; overflow: visible; box-shadow: none; display: block; }
-      header, nav, .fab, button, .tab > *:not(#struk) { display: none !important; }
+      #nota, #nota * { visibility: visible; }
+      #nota { position: absolute; left: 0; top: 0; display: block !important; }
+      header, #drawer, #drawer-back, .fab, .cart-fab, button { display: none !important; }
       main { overflow: visible; padding: 0; }
+      @page { margin: 0; size: 58mm auto; }
     }
+
+    /* --- Nota thermal --- */
+    .nota { font-family: 'Courier New', monospace; font-size: 11px; color: #000; margin: 0 auto; padding: 4px; }
+    .n-head { font-weight: bold; font-size: 14px; text-align: center; }
+    .n-line { text-align: center; font-size: 10px; }
+    .n-dash { font-size: 10px; letter-spacing: 1px; }
+    .n-row { font-weight: bold; margin-top: 3px; }
+    .n-sub { display: flex; justify-content: space-between; font-size: 10px; }
+    .n-line2 { display: flex; justify-content: space-between; }
+    .n-total { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; border-top: 1px dashed #000; margin-top: 2px; padding-top: 2px; }
+    .n-thanks { text-align: center; margin-top: 4px; font-size: 10px; }
   </style>
 </head>
 <body>
   <header>
-    <div class="row" style="align-items:center">
-      <div><h1>🛒 RumaPos <span id="hdr-toko" style="font-size:12px;opacity:.7;font-weight:normal"></span></h1><small>Point of Sale — Toko Anda</small></div>
-      <a href="landing.html" title="Halaman promosi RumaPos" style="font-size:12px;font-weight:700;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.18);color:inherit">⭐ Promo</a>
-      <span id="sync-badge" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(255,255,255,.18)">⏳</span>
-      <button id="thmbtn" onclick="togTheme()" style="width:44px;height:44px;padding:0;border-radius:50%;flex:none;font-size:18px;background:rgba(255,255,255,.18);box-shadow:none">🌙</button>
+    <div class="hdr-wrap">
+      <div class="hdr-brand">
+        <button id="menubtn" onclick="openDrawer()" class="btn-theme" title="Menu" style="display:none">☰</button>
+        <div class="hdr-logo" id="hdr-logo">R</div>
+        <div class="hdr-titles">
+          <h1>RumaPos</h1>
+          <span class="hdr-sub" id="hdr-toko">Toko 1 • Kasir POS</span>
+        </div>
+      </div>
+      <div class="hdr-actions">
+        <span id="role-badge" class="badge-role" style="display:none">PEMILIK</span>
+        <span id="sync-badge" class="badge-sync">⏳</span>
+        <button id="thmbtn" onclick="togTheme()" class="btn-theme" title="Ubah Tema">🌙</button>
+      </div>
     </div>
   </header>
 
   <main id="auth">
     <div class="card" style="margin-top:20vh;text-align:center">
       <h2 style="margin-top:0">Masuk</h2>
-      <input id="pin" type="password" placeholder="Masukkan PIN" style="text-align:center;letter-spacing:10px;font-size:24px">
+      <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan PIN" style="text-align:center;letter-spacing:10px;font-size:24px">
       <button onclick="login()">Masuk</button>
       <div style="margin-top:15px;font-size:13px;color:var(--mut)">Gunakan PIN yang diberikan pengelola.</div>
     </div>
@@ -118,12 +197,26 @@
     <div class="tab on" id="kasir">
       <div class="pos-wrap">
         <div class="pos-left">
-          <button class="b" onclick="scan()">📷 Scan</button>
-          <input id="pq" placeholder="🔍 Cari produk..." oninput="searchProd()" style="margin:0">
-          <div class="chips" id="chips"></div>
+          <div class="pos-sticky-head">
+            <div class="pos-search-row">
+              <div class="search-input-box">
+                <span class="search-icon">🔍</span>
+                <input id="pq" placeholder="Cari nama atau barcode..." oninput="searchProd()" autocomplete="off">
+              </div>
+              <button type="button" class="btn-scan-act" onclick="scan()" title="Scan Barcode Kamera">
+                📷 <span>Scan</span>
+              </button>
+            </div>
+            <div class="chips" id="chips"></div>
+          </div>
           <div id="grid"></div>
+          <button class="g cart-fab" onclick="openCheckout()">
+            <span>🧺 Keranjang (<span id="cc-n">0</span>)</span>
+            <span class="cart-fab-tot">Rp<span id="cc-t">0</span></span>
+          </button>
         </div>
-        <div class="pos-right">
+        <div class="pos-right" id="posright">
+          <button class="s back-btn" onclick="closeCheckout()">← Kembali Belanja</button>
           <div class="card" id="struk">
             <h3>🧺 Keranjang</h3>
             <ul id="list"></ul>
@@ -146,7 +239,7 @@
               <option value="Kartu">💳 Kartu Debit</option>
               <option value="Transfer">🏦 Transfer</option>
             </select>
-            <input id="cash" type="number" placeholder="Uang Diterima (Rp)" style="display:none" oninput="chgPay()">
+            <input id="cash" type="number" placeholder="Uang Diterima (Rp)" oninput="chgPay()">
             <div id="chgbox" style="display:none;background:#ecfdf5;border-radius:12px;padding:12px;margin-top:4px">
               <span class="tag" style="font-size:12px">Kembalian</span>
               <span class="big" style="color:var(--g)">Rp<span id="chg">0</span></span>
@@ -196,12 +289,27 @@
       </div>
       <div class="card">
         <h3>📦 Daftar Stok</h3>
+        <input id="sq-q" placeholder="🔍 Cari nama / barcode produk..." oninput="searchStok()" autocomplete="off">
+        <small id="plist-info" class="tag" style="display:block;margin-bottom:6px"></small>
         <div class="row" style="margin-bottom:10px">
           <button class="b" onclick="exportCSV()">⬇ Ekspor CSV</button>
           <button class="s" onclick="importCSV()">⬆ Impor CSV</button>
         </div>
         <input type="file" id="fcsv" accept=".csv" style="display:none" onchange="doImportCSV(event)">
         <ul id="plist"></ul>
+        <div class="pager" id="pager">
+          <button class="s" id="pprev" onclick="stokPage(-1)">← Sebelumnya</button>
+          <span id="pinfo" class="tag" style="font-size:13px"></span>
+          <button class="s" id="pnext" onclick="stokPage(1)">Selanjutnya →</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🗂️ Kategori Produk</h3>
+        <div class="row">
+          <input id="newcat" placeholder="Nama kategori baru" autocomplete="off">
+          <button class="b" onclick="addCat()" style="max-width:130px">＋ Tambah</button>
+        </div>
+        <ul id="catlist"></ul>
       </div>
       <div class="card">
         <h3>📒 Riwayat Perubahan Stok</h3>
@@ -210,6 +318,35 @@
     </div>
 
     <div class="tab" id="data">
+      <div class="card">
+        <h3>🏪 Profil Toko (Nota)</h3>
+        <label for="st-name">Nama Toko</label>
+        <input id="st-name" placeholder="Nama Toko">
+        <label for="st-addr">Alamat</label>
+        <input id="st-addr" placeholder="Jl. Contoh No. 10, Kota">
+        <label for="st-phone">No. HP / WhatsApp</label>
+        <input id="st-phone" placeholder="0812-3456-7890">
+        <label for="st-foot">Pesan Penutup Nota</label>
+        <input id="st-foot" placeholder="Terima kasih sudah berbelanja!">
+        <label for="st-paper">Ukuran Kertas Nota</label>
+        <select id="st-paper">
+          <option value="58">58 mm (thermal umum)</option>
+          <option value="80">80 mm</option>
+        </select>
+        <label>Logo Toko (tampil di header &amp; nota)</label>
+        <div class="row" style="align-items:center;margin-bottom:10px">
+          <img id="logo-prev" style="width:64px;height:64px;object-fit:cover;border-radius:12px;display:none;border:2px solid #e5e7eb">
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <button class="b" onclick="$('slogo').click()">📷 Ganti Logo</button>
+            <button class="r" onclick="delLogo()">🗑 Hapus Logo</button>
+          </div>
+        </div>
+        <input type="file" id="slogo" accept="image/*" style="display:none" onchange="setLogo(this)">
+        <div class="row">
+          <button class="b" onclick="previewNota()">👁 Preview Nota</button>
+          <button class="g" onclick="saveStore()">💾 Simpan</button>
+        </div>
+      </div>
       <div class="card">
         <h3>💾 Backup</h3>
         <button class="b" onclick="makeBackup()">＋ Buat Backup Sekarang</button>
@@ -281,20 +418,41 @@
     </div>
   </main>
 
-  <button class="fab" id="fab-scan" onclick="scan()" style="display:none">⌑</button>
+  <div id="drawer-back" onclick="closeDrawer()"></div>
+  <aside id="drawer">
+    <div class="dprof">
+      <div class="hdr-logo" id="drawer-logo">R</div>
+      <div style="min-width:0">
+        <b id="dprof-name">RumaPos</b>
+        <small id="dprof-role">Kasir POS</small>
+      </div>
+    </div>
+    <nav class="dnav">
+      <button onclick="show('kasir')" id="tab-kasir" class="on">🧾 Kasir</button>
+      <button onclick="show('stok')" id="tab-stok" class="role-own">📦 Stok</button>
+      <button onclick="show('lap')" id="tab-lap" class="role-own">📊 Laporan</button>
+      <button onclick="show('data')" id="tab-data" class="role-own">💾 Data</button>
+      <button class="exit" onclick="logout()">🚪 Keluar</button>
+    </nav>
+  </aside>
 
-  <nav id="nav" style="display:none">
-    <button onclick="show('kasir')" id="tab-kasir" class="on">🧾 Kasir</button>
-    <button onclick="show('stok')" id="tab-stok" class="role-own">📦 Stok</button>
-    <button onclick="show('lap')" id="tab-lap" class="role-own">📊 Laporan</button>
-    <button onclick="show('data')" id="tab-data" class="role-own">💾 Data</button>
-    <button onclick="logout()">Keluar</button>
-  </nav>
+  <div id="nota-modal" class="nota-modal">
+    <div class="nota-paper">
+      <div id="nota-body"></div>
+      <div class="nota-actions">
+        <button class="b" id="nota-bt" onclick="cetakBt()" style="display:none">🖨️ Cetak Bluetooth</button>
+        <button class="g" onclick="cetakSistem()">🖨️ Cetak / Simpan PDF</button>
+        <button class="s" onclick="closeNota()">Tutup</button>
+      </div>
+    </div>
+  </div>
 
   <div id="scan">
     <video id="cam" autoplay playsinline muted></video>
     <button onclick="stopScan()">Tutup</button>
   </div>
+
+  <div id="nota" style="display:none"></div>
 
   <div id="printbar" style="text-align:center">
     <h3 id="pb-n" style="margin:0">Nama</h3>

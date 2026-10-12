@@ -17,23 +17,45 @@ db.trash ||= [];
 db.backups ||= [];
 db.pinO ||= '1234';
 db.pinC ||= '0000';
+db.store ||= { name: 'Toko Saya', address: '', phone: '', footer: 'Terima kasih sudah berbelanja!', paper: '58' };
 db.discType ||= 'nominal';
 db.discVal ||= 0;
+db.categories ||= ['Makanan', 'Minuman', 'Sembako', 'Lainnya'];
 if(!db.tokoId) { db.tokoId = 'TOKO_' + Math.floor(Math.random()*9000+1000); save(); }
 
 // Produk contoh untuk demo
+const svgIcon = (emoji, bg) => 'data:image/svg+xml,' + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='${bg}'/><text x='50' y='58' font-size='46' text-anchor='middle'>${emoji}</text></svg>`);
+
 if(!db.seeded) {
-    const svg = (emoji, bg) => 'data:image/svg+xml,' + encodeURIComponent(
-        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='${bg}'/><text x='50' y='58' font-size='46' text-anchor='middle'>${emoji}</text></svg>`);
     db.products = [
-        { id: 'P_SEED1', n: 'Indomie Goreng', p: 3500, q: 24, c: '8992388101010', cat: 'Makanan', img: svg('🍜', '#fef3c7') },
-        { id: 'P_SEED2', n: 'Aqua 600ml', p: 4000, q: 30, c: '8996001306015', cat: 'Minuman', img: svg('💧', '#dbeafe') },
-        { id: 'P_SEED3', n: 'Teh Botol 350ml', p: 5000, q: 18, c: '', cat: 'Minuman', img: svg('🍵', '#d1fae5') },
-        { id: 'P_SEED4', n: 'Kopi Sachet', p: 2500, q: 40, c: '', cat: 'Makanan', img: svg('☕', '#f3e8d2') },
-        { id: 'P_SEED5', n: 'Beras 5kg', p: 75000, q: 10, c: '', cat: 'Sembako', img: svg('🍚', '#fef9c3') },
-        { id: 'P_SEED6', n: 'Minyak Goreng 1L', p: 18000, q: 12, c: '', cat: 'Sembako', img: svg('🛢️', '#e0e7ff') }
+        { id: 'P_SEED1', n: 'Indomie Goreng', p: 3500, q: 24, c: '8992388101010', cat: 'Makanan', img: svgIcon('🍜', '#fef3c7') },
+        { id: 'P_SEED2', n: 'Aqua 600ml', p: 4000, q: 30, c: '8996001306015', cat: 'Minuman', img: svgIcon('💧', '#dbeafe') },
+        { id: 'P_SEED3', n: 'Teh Botol 350ml', p: 5000, q: 18, c: '', cat: 'Minuman', img: svgIcon('🍵', '#d1fae5') },
+        { id: 'P_SEED4', n: 'Kopi Sachet', p: 2500, q: 40, c: '', cat: 'Makanan', img: svgIcon('☕', '#f3e8d2') },
+        { id: 'P_SEED5', n: 'Beras 5kg', p: 75000, q: 10, c: '', cat: 'Sembako', img: svgIcon('🍚', '#fef9c3') },
+        { id: 'P_SEED6', n: 'Minyak Goreng 1L', p: 18000, q: 12, c: '', cat: 'Sembako', img: svgIcon('🛢️', '#e0e7ff') }
     ];
     db.seeded = true;
+    save();
+}
+
+// Tambah produk demo jika produk kurang dari 12 (untuk tes pagination)
+if(!db.seedPageExtra) {
+    const extra = [
+        { id: 'P_SEED7', n: 'Gula Pasir 1kg', p: 16000, q: 20, c: '8991001', cat: 'Sembako', img: svgIcon('🧂', '#fef3c7') },
+        { id: 'P_SEED8', n: 'Telur Ayam 1kg', p: 28000, q: 15, c: '8991002', cat: 'Sembako', img: svgIcon('🥚', '#ffedd5') },
+        { id: 'P_SEED9', n: 'Susu UHT 200ml', p: 6000, q: 25, c: '8991003', cat: 'Minuman', img: svgIcon('🥛', '#e0f2fe') },
+        { id: 'P_SEED10', n: 'Biskuit Roma', p: 8500, q: 18, c: '8991004', cat: 'Makanan', img: svgIcon('🍪', '#fef9c3') },
+        { id: 'P_SEED11', n: 'Sabun Mandi', p: 4500, q: 30, c: '8991005', cat: 'Lainnya', img: svgIcon('🧼', '#f3e8ff') },
+        { id: 'P_SEED12', n: 'Shampoo Sachet', p: 1500, q: 50, c: '8991006', cat: 'Lainnya', img: svgIcon('🧴', '#ecfdf5') },
+        { id: 'P_SEED13', n: 'Kerupuk Kaleng', p: 2000, q: 40, c: '8991007', cat: 'Makanan', img: svgIcon('🍘', '#fff7ed') },
+        { id: 'P_SEED14', n: 'Mie Kari Ayam', p: 3500, q: 22, c: '8991008', cat: 'Makanan', img: svgIcon('🍲', '#fef3c7') }
+    ];
+    extra.forEach(x => {
+        if(!db.products.some(p => p.id === x.id || p.n === x.n)) db.products.push(x);
+    });
+    db.seedPageExtra = true;
     save();
 }
 
@@ -91,10 +113,23 @@ window.login = async () => {
         $('auth').style.display = 'none';
         $('auth').style.opacity = '1';
         $('app').style.display = 'block';
-        $('nav').style.display = 'flex';
-        $('fab-scan').style.display = 'block';
-        $('hdr-toko').textContent = `(${db.tokoId})`;
+        if($('menubtn')) $('menubtn').style.display = 'flex';
+        if($('fab-scan')) $('fab-scan').style.display = 'block';
+        if($('hdr-toko')) $('hdr-toko').textContent = `${db.tokoId || 'Toko Utama'} • Kasir POS`;
+        let nm = $('dprof-name'); if(nm) nm.textContent = db.store.name || 'RumaPos';
+        let dr = $('dprof-role'); if(dr) dr.textContent = role === 'owner' ? '👑 Pemilik' : '🧑‍💼 Kasir';
+        applyLogo();
+        renderCatSelect();
+        renderCats();
+        let rb = $('role-badge');
+        if(rb) {
+            rb.style.display = 'inline-block';
+            rb.textContent = role === 'owner' ? '👑 Pemilik' : '🧑‍💼 Kasir';
+            rb.style.background = role === 'owner' ? 'rgba(16,185,129,.35)' : 'rgba(245,158,11,.35)';
+        }
         activePin = p;
+        localStorage.setItem('rp_last_pin', p);
+        localStorage.setItem('rp_last_ts', String(Date.now()));
         
         // --- Rekam Jam Masuk Kasir ke Cloud ---
         if(window.fdb && navigator.onLine) {
@@ -110,9 +145,17 @@ window.login = async () => {
         document.querySelectorAll('.role-own').forEach(e => e.style.display = role === 'owner' ? 'block' : 'none');
         if($('disc-type')) $('disc-type').value = db.discType || 'nominal';
         if($('lowstock')) $('lowstock').value = db.lowStock || 5;
+        if($('st-name')) {
+            $('st-name').value = db.store.name;
+            $('st-addr').value = db.store.address;
+            $('st-phone').value = db.store.phone;
+            $('st-foot').value = db.store.footer;
+            $('st-paper').value = db.store.paper;
+        }
         pinTries = 0;
         startIdle();
         show('kasir');
+        closeCheckout();
     } catch(e) {
         $('auth').style.opacity = '1';
         pinTries++;
@@ -133,18 +176,23 @@ window.logout = async () => {
     }
     stopIdle();
     role = ''; activePin = ''; sessionId = '';
+    localStorage.removeItem('rp_last_pin');
+    localStorage.removeItem('rp_last_ts');
+    if($('role-badge')) $('role-badge').style.display = 'none';
+    closeDrawer();
+    if($('menubtn')) $('menubtn').style.display = 'none';
     $('auth').style.display = 'block';
     $('app').style.display = 'none';
-    $('nav').style.display = 'none';
-    $('fab-scan').style.display = 'none';
+    if($('fab-scan')) $('fab-scan').style.display = 'none';
 };
 
 // --- Logout otomatis saat idle ---
 const resetIdle = () => {
     if(!role) return;
+    localStorage.setItem('rp_last_ts', String(Date.now()));
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-        alert('Sesi berakhir karena tidak ada aktivitas. Silakan login kembali.');
+        alert('Sesi dikunci karena tidak ada aktivitas. Silakan masukkan PIN kembali.');
         logout();
     }, IDLE_MS);
 };
@@ -168,8 +216,12 @@ window.rp = rp; window.clean = clean;
 
 window.show = t => {
     ['kasir','stok','lap','data'].forEach(x => { $('tab-'+x).classList.toggle('on', x===t); $(x).classList.toggle('on', x===t); });
+    closeDrawer();
     if(t==='stok') { renderP(); renderLog(); } if(t==='lap') renderS(); if(t==='data') { renderBackups(); renderTrash(); }
 };
+
+window.openDrawer = () => { $('drawer').classList.add('on'); $('drawer-back').classList.add('on'); };
+window.closeDrawer = () => { $('drawer').classList.remove('on'); $('drawer-back').classList.remove('on'); };
 
 let editIdx = null;
 
@@ -266,11 +318,21 @@ window.adjustStock = i => {
     save(); renderP();
 };
 
+let stokQ = '', stokPageN = 0;
+const STOK_PER = 10;
+
+window.searchStok = () => { stokQ = $('sq-q').value; stokPageN = 0; renderP(); };
+window.stokPage = d => { stokPageN = Math.max(0, stokPageN + d); renderP(); };
+
 window.renderP = () => {
-    let q = (searchQ || '').toLowerCase();
-    let list = db.products.map((p, i) => ({ p, i })).filter(x => !q || x.p.n.toLowerCase().includes(q));
+    let q = (stokQ || '').toLowerCase();
+    let all = db.products.map((p, i) => ({ p, i }))
+        .filter(x => !q || x.p.n.toLowerCase().includes(q) || (x.p.c || '').includes(q));
+    let pages = Math.max(1, Math.ceil(all.length / STOK_PER));
+    if(stokPageN >= pages) stokPageN = pages - 1;
+    let list = all.slice(stokPageN * STOK_PER, (stokPageN + 1) * STOK_PER);
     $('plist').innerHTML = list.map(({ p, i }) =>
-        `<li><span class="big">${p.n}<span class="tag">Rp${rp(p.p)} · Stok: ${p.q}${p.q <= db.lowStock ? ' ⚠️ MENIPIS' : ''}${p.c?' · '+p.c:''}</span></span>
+        `<li><span class="big">${p.n}<span class="tag">Rp${rp(p.p)} · Stok: ${p.q}${p.q <= db.lowStock ? ' ⚠️ MENIPIS' : ''}${p.c?' · '+p.c:''}${p.cat?' · '+p.cat:''}</span></span>
          <span style="display:flex;gap:6px">
            <button onclick="adjustStock(${i})" style="background:var(--g)">±</button>
            ${p.c ? `<button onclick="printBarcode(${i})" style="background:var(--s)">🖨️</button>` : ''}
@@ -278,6 +340,16 @@ window.renderP = () => {
            <button onclick="delProd(${i})" style="background:var(--r)">🗑</button>
          </span></li>`).join('')
          || '<div class="empty">Belum ada produk. Tambahkan di atas.</div>';
+    let info = $('plist-info');
+    if(info) info.textContent = `${all.length} produk` + (q ? ` cocok "${stokQ}"` : '');
+    let pg = $('pager');
+    if(pg) {
+        pg.style.display = pages > 1 ? 'flex' : 'none';
+        let pi = $('pinfo'); if(pi) pi.textContent = `Hal ${stokPageN + 1} / ${pages}`;
+        let pv = $('pprev'), nx = $('pnext');
+        if(pv) pv.disabled = stokPageN === 0;
+        if(nx) nx.disabled = stokPageN >= pages - 1;
+    }
 };
 
 window.addProd = () => {
@@ -332,18 +404,62 @@ window.printBarcode = i => {
     $('printbar').style.display = 'none';
 };
 
-const CATS = ['Semua', 'Makanan', 'Minuman', 'Sembako', 'Lainnya'];
+const CATS = () => ['Semua', ...db.categories];
 let catFilter = 'Semua', imgBuf = '';
 
 window.pickCat = c => { catFilter = c; renderGrid(); };
 
+window.addCatFast = () => {
+    let n = clean(prompt('Nama kategori baru:'), 24);
+    if(!n) return;
+    if(db.categories.some(c => c.toLowerCase() === n.toLowerCase())) return alert('Kategori sudah ada');
+    db.categories.push(n); save();
+    renderCats(); renderGrid(); renderCatSelect();
+};
+
+window.addCat = () => {
+    let n = clean($('newcat').value, 24);
+    if(!n) return alert('Nama kategori kosong');
+    if(db.categories.some(c => c.toLowerCase() === n.toLowerCase())) return alert('Kategori sudah ada');
+    db.categories.push(n); save();
+    $('newcat').value = '';
+    renderCats(); renderGrid(); renderCatSelect();
+    alert('Kategori "' + n + '" ditambahkan.');
+};
+
+window.delCat = i => {
+    let n = db.categories[i];
+    if(db.categories.length <= 1) return alert('Minimal harus ada 1 kategori.');
+    if(!confirm(`Hapus kategori "${n}"? Produk di kategori ini dipindah ke kategori pertama yang tersisa.`)) return;
+    let fallback = db.categories.find((_, j) => j !== i);
+    db.products.forEach(p => { if(p.cat === n) p.cat = fallback; });
+    db.categories.splice(i, 1);
+    if(catFilter === n) catFilter = 'Semua';
+    save(); renderCats(); renderGrid(); renderCatSelect(); renderP();
+    alert('Kategori dihapus.');
+};
+
+window.renderCats = () => {
+    let el = $('catlist');
+    if(!el) return;
+    el.innerHTML = db.categories.map((c, i) =>
+        `<li><span class="big">${c}<span class="tag">${db.products.filter(p => p.cat === c).length} produk</span></span>
+         <button onclick="delCat(${i})" style="background:var(--r)">🗑</button></li>`).join('');
+};
+
+window.renderCatSelect = () => {
+    let sel = $('pcat');
+    if(!sel) return;
+    let cur = sel.value;
+    sel.innerHTML = db.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+    if(db.categories.includes(cur)) sel.value = cur;
+};
+
 window.renderGrid = () => {
     let chips = $('chips');
-    if(chips && !chips.dataset.done) {
-        chips.innerHTML = CATS.map(c => `<button class="${c===catFilter?'on':''}" onclick="pickCat('${c}')">${c}</button>`).join('');
-        chips.dataset.done = '1';
-    } else if(chips) {
-        [...chips.children].forEach(b => b.classList.toggle('on', b.textContent === catFilter));
+    if(chips) {
+        chips.innerHTML = CATS().map(c => `<button class="${c===catFilter?'on':''}" onclick="pickCat('${c}')">${c}</button>`).join('') +
+            `<button class="add" onclick="addCatFast()" title="Tambah kategori baru">＋</button>`;
     }
     let q = (searchQ || '').toLowerCase();
     let list = db.products.filter(p =>
@@ -440,24 +556,25 @@ window.pay = () => {
     if(!db.cart.length) return;
     let total = grandTotal();
     let m = $('paym').value;
+    let cash = 0;
     if(m === 'Tunai') {
-        let c = Number($('cash').value) || 0;
-        if(c < total) { alert('Uang kurang. Total Rp' + rp(total) + ', diterima Rp' + rp(c)); return; }
-        alert('Kembalian: Rp' + rp(c - total));
+        cash = Number($('cash').value) || 0;
+        if(cash < total) { alert('Uang kurang. Total Rp' + rp(total) + ', diterima Rp' + rp(cash)); return; }
     }
     if(!confirm('Selesaikan transaksi Rp' + rp(total) + ' via ' + m + '?')) return;
 
     let tStr = new Date().toLocaleString('id-ID');
     let no = nextNo();
     let sub = db.cart.reduce((s, i) => s + i.p * i.qty, 0);
+    let disc = db.discType === 'persen' ? Math.round(sub * (db.discVal || 0) / 100) : (db.discVal || 0);
     let sale = {
         id: crypto.randomUUID(), no, toko_id: db.tokoId, kasir_id: activePin,
         waktu: tStr, ts: Date.now(), total, metode: m,
         items: db.cart.map(i => ({ n: clean(i.n), p: i.p, qty: i.qty })),
-        disc: db.discType === 'persen' ? Math.round(sub * (db.discVal || 0) / 100) : (db.discVal || 0)
+        disc, sub, cash, kembali: cash ? cash - total : 0
     };
     db.cart.forEach(c => { let p = db.products.find(x => x.n === c.n); if(p) logStock(p, -c.qty, 'Penjualan ' + no); });
-    db.sales.unshift({ t: tStr, items: sale.items, total, m, id: sale.id, no, disc: sale.disc });
+    db.sales.unshift({ t: tStr, items: sale.items, total, m, id: sale.id, no, disc, sub, cash, kembali: sale.kembali });
     
     // --- Kirim ke Firebase Admin ---
     db.pendingSales.push(sale);
@@ -466,18 +583,139 @@ window.pay = () => {
     autoBackup('Transaksi ' + no);
 
     db.cart = []; db.discVal = 0; if($('disc-val')) $('disc-val').value = '';
-    save(); render(); chgPay();
-    $('printbar').style.display = 'none';
-    $('struk').style.display = 'block';
+    save(); render(); renderGrid(); chgPay();
+    closeCheckout();
+    printNota(sale);
+};
+
+// --- Nota thermal ---
+const buildNotaHtml = sale => {
+    let s = db.store, w = s.paper === '80' ? 300 : 220;
+    let rows = sale.items.map(i =>
+        `<div class="n-row">${clean(i.n)}</div>
+         <div class="n-sub"><span>${i.qty} x ${rp(i.p)}</span><span>${rp(i.p * i.qty)}</span></div>`).join('');
+    return `
+      <div class="nota" style="width:${w}px;margin:0 auto;padding:14px 10px">
+        ${db.store.logo ? `<div style="text-align:center;margin-bottom:6px"><img src="${db.store.logo}" style="width:64px;height:64px;object-fit:cover;border-radius:8px"></div>` : ''}
+        <div class="n-head">${clean(s.name, 40) || 'Toko'}</div>
+        ${s.address ? `<div class="n-line">${clean(s.address, 120)}</div>` : ''}
+        ${s.phone ? `<div class="n-line">${clean(s.phone, 30)}</div>` : ''}
+        <div class="n-dash">----------------------------</div>
+        <div class="n-line">No   : ${sale.no}</div>
+        <div class="n-line">Waktu: ${sale.waktu}</div>
+        <div class="n-line">Kasir: ${sale.kasir_id || '-'}</div>
+        <div class="n-line">Bayar: ${sale.metode}</div>
+        <div class="n-dash">----------------------------</div>
+        ${rows}
+        <div class="n-dash">----------------------------</div>
+        <div class="n-line2"><span>Subtotal</span><span>${rp(sale.sub)}</span></div>
+        ${sale.disc ? `<div class="n-line2"><span>Diskon</span><span>-${rp(sale.disc)}</span></div>` : ''}
+        <div class="n-total"><span>TOTAL</span><span>${rp(sale.total)}</span></div>
+        ${sale.cash ? `<div class="n-line2"><span>Tunai</span><span>${rp(sale.cash)}</span></div>
+        <div class="n-line2"><span>Kembali</span><span>${rp(sale.kembali)}</span></div>` : ''}
+        <div class="n-dash">----------------------------</div>
+        <div class="n-thanks">${clean(s.footer, 80) || 'Terima kasih'}</div>
+      </div>`;
+};
+
+const openNota = sale => {
+    window._lastNota = sale;
+    $('nota-body').innerHTML = buildNotaHtml(sale);
+    let bt = $('nota-bt');
+    if(bt) bt.style.display = (window.Capacitor && window.Capacitor.isPluginAvailable('BleClient')) ? 'block' : 'none';
+    $('nota-modal').classList.add('on');
+};
+
+window.closeNota = () => $('nota-modal').classList.remove('on');
+
+window.cetakSistem = () => {
+    let sale = window._lastNota;
+    if(!sale) return;
+    let box = $('nota');
+    box.innerHTML = buildNotaHtml(sale);
+    box.style.display = 'block';
+    $('nota-modal').classList.remove('on');
+    let prevApp = $('app').style.display;
+    $('app').style.display = 'none';
+    $('auth').style.display = 'none';
     window.print();
+    box.style.display = 'none';
+    box.innerHTML = '';
+    $('app').style.display = prevApp;
+};
+
+window.cetakBt = () => {
+    let sale = window._lastNota;
+    if(!sale) return;
+    if(window.printBtNota) printBtNota(sale).catch(e => alert('Cetak Bluetooth gagal: ' + (e.message || e)));
+    else alert('Printer Bluetooth tidak tersedia di perangkat ini.');
+};
+
+const printNota = sale => openNota(sale);
+
+window.reprintNota = id => {
+    let s = db.sales.find(x => x.id === id);
+    if(!s) return;
+    printNota({ ...s, no: s.no, waktu: s.t, metode: s.m, kasir_id: s.kasir_id || '-' });
+};
+
+window.saveStore = () => {
+    let name = clean($('st-name').value, 40);
+    if(!name) return alert('Nama toko wajib diisi');
+    db.store = {
+        name,
+        address: clean($('st-addr').value, 120),
+        phone: clean($('st-phone').value, 30).replace(/[^\d+\-\s]/g, ''),
+        footer: clean($('st-foot').value, 80),
+        paper: $('st-paper').value,
+        logo: db.store.logo || null
+    };
+    save();
+    let nm = $('dprof-name'); if(nm) nm.textContent = name;
+    alert('Profil toko disimpan.');
+};
+
+window.setLogo = async inp => {
+    let f = inp.files[0];
+    if(!f) return;
+    let logo = await compress(f);
+    if(!logo) return alert('Gagal memproses gambar');
+    db.store.logo = logo;
+    save(); applyLogo();
+    inp.value = '';
+    alert('Logo toko diperbarui.');
+};
+
+window.delLogo = () => {
+    if(!db.store.logo) return alert('Belum ada logo.');
+    if(!confirm('Hapus logo toko?')) return;
+    delete db.store.logo;
+    save(); applyLogo();
+    alert('Logo dihapus.');
+};
+
+const applyLogo = () => {
+    let logo = db.store.logo;
+    let h = $('hdr-logo'), d = $('drawer-logo'), p = $('logo-prev');
+    if(h) h.innerHTML = logo ? `<img src="${logo}" alt="logo">` : 'R';
+    if(d) d.innerHTML = logo ? `<img src="${logo}" alt="logo">` : 'R';
+    if(p) { if(logo) { p.src = logo; p.style.display = 'block'; } else p.style.display = 'none'; }
+};
+
+window.previewNota = () => {
+    printNota({
+        no: 'TRX-CONTOH', waktu: new Date().toLocaleString('id-ID'), kasir_id: activePin || '-',
+        metode: 'Tunai', items: [{ n: 'Contoh Produk', p: 10000, qty: 2 }],
+        sub: 20000, disc: 2000, total: 18000, cash: 20000, kembali: 2000
+    });
 };
 
 const syncBadge = () => {
     let b = $('sync-badge');
     if(!b) return;
-    if(!navigator.onLine) { b.textContent = '📡 Offline'; b.style.background = 'rgba(239,68,68,.5)'; }
-    else if(db.pendingSales.length) { b.textContent = `⏳ ${db.pendingSales.length} menunggu`; b.style.background = 'rgba(245,158,11,.5)'; }
-    else { b.textContent = '✅ Tersinkron'; b.style.background = 'rgba(16,185,129,.5)'; }
+    if(!navigator.onLine) { b.textContent = '● Offline'; b.style.background = 'rgba(239,68,68,.35)'; }
+    else if(db.pendingSales.length) { b.textContent = `⏳ ${db.pendingSales.length} antre`; b.style.background = 'rgba(245,158,11,.35)'; }
+    else { b.textContent = '● Online'; b.style.background = 'rgba(16,185,129,.35)'; }
 };
 
 const syncPending = async () => {
@@ -519,6 +757,12 @@ window.chgPay = () => {
     $('chg').textContent = rp(kembali);
 };
 
+window.openCheckout = () => {
+    $('posright').classList.add('open');
+    chgPay();
+};
+window.closeCheckout = () => $('posright').classList.remove('open');
+
 window.render = () => {
     let empty = !db.cart.length;
     $('emptycart').style.display = empty ? 'block' : 'none';
@@ -533,7 +777,12 @@ window.render = () => {
     let d = db.discType === 'persen' ? Math.round(sub * (db.discVal || 0) / 100) : (db.discVal || 0);
     if($('disc-row')) $('disc-row').style.display = d > 0 ? 'flex' : 'none';
     if($('disc-amt')) $('disc-amt').textContent = '-Rp' + rp(d);
-    $('tot').textContent = rp(Math.max(0, sub - d));
+    let gt = Math.max(0, sub - d);
+    $('tot').textContent = rp(gt);
+    // Badge keranjang HP
+    let n = db.cart.reduce((s, i) => s + i.qty, 0);
+    if($('cc-n')) $('cc-n').textContent = n;
+    if($('cc-t')) $('cc-t').textContent = rp(gt);
 };
 
 window.renderS = () => {
@@ -570,7 +819,8 @@ window.detailSale = id => {
         (s.disc ? `\nDiskon: -Rp${rp(s.disc)}` : '') +
         `\nTotal: Rp${rp(s.total)}`;
     if(s.refund) detail += '\n\nSTATUS: DIBATALKAN';
-    if(!s.refund && confirm(detail + '\n\nBatalkan transaksi ini (refund)?')) refundSale(id);
+    if(!s.refund && confirm(detail + '\n\n1. Cetak ulang nota\n2. Batalkan transaksi (refund)\n\nKlik OK untuk cetak ulang, Batal untuk tutup.')) reprintNota(s.id);
+    else if(!s.refund && confirm('Batalkan transaksi ini (refund)?')) refundSale(s.id);
     else alert(detail);
 };
 
@@ -687,8 +937,21 @@ const matchCode = code => {
 };
 
 render();
+chgPay();
+applyLogo();
 syncBadge();
 renderGrid();
+
+// Auto-login jika sesi PIN belum kedaluwarsa (login sekali, minta PIN jika idle > IDLE_MS)
+const checkSavedSession = () => {
+    let savedPin = readLS('rp_last_pin');
+    let lastTs = Number(readLS('rp_last_ts')) || 0;
+    if(savedPin && (Date.now() - lastTs < IDLE_MS)) {
+        if($('pin')) $('pin').value = savedPin;
+        login();
+    }
+};
+checkSavedSession();
 
 // ponytail: expose untuk testing (test.js), bukan untuk UI
 window.grandTotal = grandTotal; window.nextNo = nextNo; window.db = db;
