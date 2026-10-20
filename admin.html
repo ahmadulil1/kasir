@@ -42,6 +42,7 @@
       <button id="t-dash" class="on" onclick="showT('dash')">📊 Dashboard</button>
       <button id="t-hr" onclick="showT('hr')">🧑‍💼 Pantau Kasir</button>
       <button id="t-akun" onclick="showT('akun')">⚙️ Kelola Akun</button>
+      <button id="t-lic" onclick="showT('lic')">🔑 Lisensi</button>
     </nav>
   </aside>
 
@@ -119,11 +120,30 @@
         </div>
       </div>
     </div>
+
+    <!-- TAB: LISENSI -->
+    <div id="c-lic" class="tab">
+      <div class="row">
+        <div class="card" style="--acc:var(--green)">
+          <h3>Generate Kode Aktivasi</h3>
+          <p style="font-size:13px;color:var(--mute);margin-top:0">Buat kode setelah pembeli bayar. Kode hanya bisa dipakai di <b>1 device</b>. Kirim ke pembeli via WhatsApp.</p>
+          <button class="btn" onclick="window.genLic()">🎲 Buat Kode Baru</button>
+          <div id="last-code" style="margin-top:14px;display:none;font-size:22px;font-weight:800;color:var(--green);letter-spacing:1px;word-break:break-word"></div>
+        </div>
+        <div class="card">
+          <h3>Daftar Kode Aktivasi</h3>
+          <table>
+            <thead><tr><th>Kode</th><th>Status</th><th>Device</th><th>Dibuat</th><th>Aksi</th></tr></thead>
+            <tbody id="list-lic"><tr><td colspan="5" style="text-align:center">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script type="module">
     window.showT = (id) => {
-        ['dash', 'hr', 'akun'].forEach(x => {
+        ['dash', 'hr', 'akun', 'lic'].forEach(x => {
             document.getElementById('t-'+x).classList.toggle('on', x===id);
             document.getElementById('c-'+x).classList.toggle('on', x===id);
         });
@@ -276,6 +296,52 @@
 
     window.delAkun = async (id) => {
         if(confirm('Hapus akun ini?')) await deleteDoc(doc(db, "users", id));
+    };
+
+    // 4. Lisensi: kode aktivasi RumaPos
+    const CHARSM = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // tanpa O/0/I/1 agar tak tertukar
+    const fmtCode = code => (code && code.length >= 12) ? code.slice(0,4) + '-' + code.slice(4,8) + '-' + code.slice(8,12) : (code || '');
+    window.fmtCode = fmtCode;
+
+    onSnapshot(collection(db, "licenses"), (snap) => {
+        let html = '';
+        snap.forEach(d => {
+            let l = d.data() || {};
+            let status = l.blocked
+                ? `<span class="badge off">DIBLOKIR</span>`
+                : (l.device ? `<span class="badge on">TERPAKAI</span>` : `<span class="badge" style="background:rgba(139,92,246,.2);color:var(--acc2)">SIAP DIJUAL</span>`);
+            html += `<tr>
+                <td><b>${fmtCode(d.id)}</b></td>
+                <td>${status}</td>
+                <td style="font-size:12px;color:var(--mute)">${l.device || '-'}</td>
+                <td style="font-size:12px;color:var(--mute)">${l.created ? new Date(l.created).toLocaleDateString('id-ID') : '-'}</td>
+                <td>${l.blocked
+                    ? `<button class="btn btn-r" style="background:var(--green)" onclick="window.unblockLic('${d.id}')">Buka Blokir</button>`
+                    : `<button class="btn btn-r" onclick="window.blockLic('${d.id}')">Blokir</button>`}</td>
+            </tr>`;
+        });
+        document.getElementById('list-lic').innerHTML = html || '<tr><td colspan="5" style="text-align:center">Belum ada kode. Klik Generate untuk membuat kode pertama.</td></tr>';
+    });
+
+    window.genLic = async () => {
+        let r = '';
+        for(let i = 0; i < 8; i++) r += CHARSM[Math.floor(Math.random() * CHARSM.length)];
+        let code = 'RUMA' + r;
+        await setDoc(doc(db, 'licenses', code), { created: Date.now(), device: '', blocked: false });
+        let el = document.getElementById('last-code');
+        el.textContent = 'Kode baru: ' + fmtCode(code) + ' (bisa dikirim ke pembeli)';
+        el.style.display = 'block';
+        try { if(navigator.clipboard) navigator.clipboard.writeText(fmtCode(code)); } catch(e) {}
+    };
+
+    window.blockLic = async (code) => {
+        if(confirm(`Blokir kode ${fmtCode(code)}? Device pemakainya akan otomatis kembali ke mode DEMO saat online.`)) {
+            await setDoc(doc(db, 'licenses', code), { blocked: true }, { merge: true });
+        }
+    };
+
+    window.unblockLic = async (code) => {
+        await setDoc(doc(db, 'licenses', code), { blocked: false }, { merge: true });
     };
 
     window.testTrx = async () => {

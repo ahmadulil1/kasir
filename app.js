@@ -63,6 +63,25 @@ if(!db.seedPageExtra) {
 db.products.forEach(p => { if(!p.id) p.id = 'P' + Date.now() + Math.floor(Math.random()*1000); });
 db.lowStock ||= 5;
 
+// ---------- Lisensi & Demo (RumaPos) ----------
+// Versi DEMO dibatasi jumlah produk (seed contoh = 14, sisakan 1 slot untuk dicoba).
+// Aktivasi dengan kode dari penjual; kode terikat 1 device via Firestore licenses/{code}.
+const DEMO_MAX_PRODUK = 15;
+let lic = (() => { try { return JSON.parse(readLS('rp_lic')); } catch(e) { return null; } })();
+window.isLicensed = () => !!(lic && lic.code && !lic.blocked);
+window.DEVICE_ID = (() => {
+    let d = readLS('rp_device');
+    if(!d) { d = 'DEV_' + Math.random().toString(36).slice(2,10).toUpperCase(); try { localStorage.setItem('rp_device', d); } catch(e) {} }
+    return d;
+})();
+const licUI = () => {
+    let b = $('demo-banner');
+    if(b) b.style.display = window.isLicensed() ? 'none' : 'block';
+    let t = $('tab-lic');
+    if(t) t.textContent = window.isLicensed() ? '✅ Lisensi Aktif' : '🔑 Aktivasi';
+};
+window.licUI = licUI;
+
 const nextNo = function() {
     db.noSeq = (db.noSeq || 0) + 1;
     save();
@@ -357,6 +376,9 @@ window.addProd = () => {
     let cat = $('pcat').value;
     if(!n || !Number.isSafeInteger(p) || p <= 0 || !Number.isSafeInteger(q) || q < 0) return alert('Nama, harga, atau stok tidak valid');
     if(c && db.products.some((x, i) => x.c === c && i !== editIdx)) return alert('Barcode sudah dipakai produk lain');
+    // Batas demo: hanya saat menambah produk BARU (edit produk lama selalu boleh)
+    if(editIdx === null && !window.isLicensed() && db.products.length >= DEMO_MAX_PRODUK)
+        return alert(`Versi Demo maksimal ${DEMO_MAX_PRODUK} produk. Aktivasi lisensi untuk produk tanpa batas.`);
     if(editIdx !== null) {
         db.products[editIdx] = { ...db.products[editIdx], n, p, q, c, cat, img: imgBuf || db.products[editIdx].img };
         editIdx = null;
@@ -614,6 +636,7 @@ const buildNotaHtml = sale => {
         ${sale.cash ? `<div class="n-line2"><span>Tunai</span><span>${rp(sale.cash)}</span></div>
         <div class="n-line2"><span>Kembali</span><span>${rp(sale.kembali)}</span></div>` : ''}
         <div class="n-dash">----------------------------</div>
+        ${window.isLicensed() ? '' : '<div class="n-line" style="margin-top:3px">*** VERSI DEMO - RumaPos ***</div>'}
         <div class="n-thanks">${clean(s.footer, 80) || 'Terima kasih'}</div>
       </div>`;
 };
@@ -735,6 +758,63 @@ window.retrySync = () => syncPending();
 window.addEventListener('online', syncPending);
 window.addEventListener('offline', syncBadge);
 window.addEventListener('firebase-ready', syncPending);
+
+// ---------- Aktivasi lisensi ----------
+window.openLic = () => {
+    let b = $('lic-body'), m = $('lic-modal');
+    if(!b || !m) return;
+    if(window.isLicensed()) {
+        b.innerHTML = `<div style="text-align:center;padding:6px 0 2px;color:#000">
+          <div style="font-size:44px">✅</div>
+          <b style="font-size:17px">Lisensi Aktif</b>
+          <p style="color:#666;font-size:13px;margin:8px 0 2px">Kode: <b>${lic.code.slice(0,4)}-${lic.code.slice(4,8)}-${lic.code.slice(8,12)}</b><br>Device: ${window.DEVICE_ID}</p>
+          <p style="color:#999;font-size:12px">Semua fitur terbuka di device ini. Sekali bayar, tanpa langganan.</p></div>`;
+    } else {
+        b.innerHTML = `<div style="text-align:center;padding:6px 0 2px;color:#000">
+          <div style="font-size:44px">🔓</div>
+          <b style="font-size:17px">Aktivasi RumaPos</b>
+          <p style="color:#555;font-size:13px;margin:6px 0 12px">Beli lisensi (sekali bayar Rp 75.000) untuk membuka produk tanpa batas & menghapus tanda DEMO.</p>
+          <input id="lic-in" placeholder="Kode: RUMA-XXXX-XXXX" style="width:100%;text-align:center;font-size:16px" oninput="this.value=this.value.replace(/[^a-zA-Z0-9\\s-]/g,'')">
+        </div>`;
+        let inp = $('lic-in'); if(inp) setTimeout(() => inp.focus(), 80);
+    }
+    m.classList.add('on');
+};
+window.closeLic = () => { if($('lic-modal')) $('lic-modal').classList.remove('on'); };
+
+window.doActivate = async () => {
+    let raw = String(($('lic-in') || {}).value || '').trim().toUpperCase().replace(/[\s-]/g, '');
+    if(raw && raw.indexOf('RUMA') !== 0) raw = 'RUMA' + raw;
+    if(!raw) return alert('Masukkan kode aktivasi');
+    if(!navigator.onLine || !window.fdb || !window.fget) return alert('Aktivasi butuh koneksi internet sekali. Nyalakan Wi-Fi/data lalu coba lagi.');
+    try {
+        let snap = await window.fget(window.fdoc(window.fdb, 'licenses', raw));
+        if(!snap.exists()) return alert('Kode tidak dikenal. Periksa penulisan atau hubungi penjual.');
+        let data = snap.data() || {};
+        if(data.blocked) return alert('Kode ini sudah diblokir. Hubungi penjual.');
+        if(data.device && data.device !== window.DEVICE_ID) return alert('Kode ini sudah dipakai device lain. Hubungi penjual jika ini adalah ganti HP yang sah.');
+        if(!data.device) await window.fupd(window.fdoc(window.fdb, 'licenses', raw), { device: window.DEVICE_ID, at: Date.now() });
+        lic = { code: raw, at: Date.now(), blocked: false };
+        try { localStorage.setItem('rp_lic', JSON.stringify(lic)); } catch(e) {}
+        closeLic(); licUI(); renderGrid();
+        toast('✅ Aktivasi berhasil! Semua fitur terbuka.');
+    } catch(e) { console.error('Aktivasi gagal', e); alert('Aktivasi gagal: ' + ((e && e.message) || e)); }
+};
+
+// Cek pemblokiran lisensi dari penjual (administrative block) — jalan saat online
+window.licCheck = async () => {
+    if(!window.isLicensed() || !window.fdb || !window.fget || !navigator.onLine) return;
+    try {
+        let snap = await window.fget(window.fdoc(window.fdb, 'licenses', lic.code));
+        if(snap.exists() && (snap.data() || {}).blocked) {
+            lic = null;
+            try { localStorage.removeItem('rp_lic'); } catch(e) {}
+            licUI(); renderGrid();
+            toast('⚠️ Lisensi diblokir. Hubungi penjual.', false);
+        }
+    } catch(e) { /* offline/blokir jaringan: biarkan status lokal */ }
+};
+window.addEventListener('firebase-ready', licCheck);
 
 const grandTotal = () => {
     let sub = db.cart.reduce((s, i) => s + i.p * i.qty, 0);
@@ -957,6 +1037,7 @@ render();
 chgPay();
 applyLogo();
 syncBadge();
+licUI();
 renderGrid();
 
 // Auto-login jika sesi PIN belum kedaluwarsa (login sekali, minta PIN jika idle > IDLE_MS)

@@ -21,5 +21,16 @@ service cloud.firestore {
     }
     match /users/{userId} { allow read, write: if admin(); }
     match /stores/{storeId}/{document=**} { allow read, write: if admin() || sameStore(storeId); }
+    // Licenses: kode aktivasi RumaPos. Kode acak = rahasia, jadi read terbuka untuk
+    // verifikasi aktivasi di app kasir. App hanya boleh mengisi field device/at
+    // (tidak bisa mengubah blocked) dan hanya pada kode yang belum terpakai.
+    match /licenses/{code} {
+      allow read: if true;
+      allow update: if (!('blocked' in resource.data) || resource.data.blocked == false)
+        && (!('device' in resource.data) || resource.data.device == '')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['device', 'at']);
+      // create/delete dari admin.html (catatan atas: butuh Auth aktif untuk admin())
+      allow create, delete: if admin() || !signedIn();
+    }
   }
 }

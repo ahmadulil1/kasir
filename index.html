@@ -163,6 +163,11 @@
     .n-line2 { display: flex; justify-content: space-between; }
     .n-total { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; border-top: 1px dashed #000; margin-top: 2px; padding-top: 2px; }
     .n-thanks { text-align: center; margin-top: 4px; font-size: 10px; }
+
+    /* --- Banner demo & dialog lisensi --- */
+    #demo-banner { display: none; background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; text-align: center; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    #lic-modal .nota-paper { max-width: 360px; width: 100%; padding: 18px 16px 0; }
+    #lic-modal button.g { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
   </style>
 </head>
 <body>
@@ -183,6 +188,7 @@
       </div>
     </div>
   </header>
+  <div id="demo-banner" onclick="openLic()">⚠️ VERSI DEMO — maksimal 15 produk & struk bertanda DEMO. Tap untuk aktivasi.</div>
 
   <main id="auth">
     <div class="card" style="margin-top:20vh;text-align:center">
@@ -432,6 +438,7 @@
       <button onclick="show('stok')" id="tab-stok" class="role-own">📦 Stok</button>
       <button onclick="show('lap')" id="tab-lap" class="role-own">📊 Laporan</button>
       <button onclick="show('data')" id="tab-data" class="role-own">💾 Data</button>
+      <button onclick="openLic()" id="tab-lic">🔑 Aktivasi</button>
       <button class="exit" onclick="logout()">🚪 Keluar</button>
     </nav>
   </aside>
@@ -443,6 +450,16 @@
         <button class="b" id="nota-bt" onclick="cetakBt()" style="display:none">🖨️ Cetak Bluetooth</button>
         <button class="g" onclick="cetakSistem()">🖨️ Cetak / Simpan PDF</button>
         <button class="s" onclick="closeNota()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lic-modal" class="nota-modal">
+    <div class="nota-paper">
+      <div id="lic-body"></div>
+      <div class="nota-actions" style="position:static;background:transparent;border:0;padding:12px 0 14px">
+        <button class="g" id="lic-btn" onclick="doActivate()">🔓 Aktivasi Sekarang</button>
+        <button class="s" onclick="closeLic()">Tutup</button>
       </div>
     </div>
   </div>
