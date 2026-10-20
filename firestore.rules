@@ -1,36 +1,68 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ponytail: rules require Firebase Auth claims; deploy only after Auth setup.
+    // === RumaPos: keamanan berbasis Auth ===
+    // - App kasir: sign-in ANONYMOUS, terikat toko via dok devices/{uid}
+    // - Admin web: sign-in EMAIL/PASSWORD, cek dok admins/{uid} (dikelola manual)
     function signedIn() { return request.auth != null; }
-    function admin() { return signedIn() && request.auth.token.admin == true; }
-    function sameStore(storeId) { return signedIn() && request.auth.token.storeId == storeId; }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function myStore() {
+      return get(/databases/$(database)/documents/devices/$(request.auth.uid)).data.tokoId;
+    }
 
+    // Transaksi: app hanya boleh menulis ke tokonya sendiri
     match /sales/{saleId} {
-      allow create: if sameStore(request.resource.data.toko_id)
+      allow create: if signedIn() && request.resource.data.toko_id == myStore()
         && request.resource.data.total is int
         && request.resource.data.total > 0;
-      allow read: if admin() || sameStore(resource.data.toko_id);
-      allow update, delete: if admin();
+      allow read: if isAdmin() || (signedIn() && resource.data.toko_id == myStore());
+      allow update, delete: if isAdmin();
     }
+
+    // Sesi kasir (jam kerja)
     match /sessions/{sessionId} {
-      allow create: if sameStore(request.resource.data.toko_id);
-      allow read: if admin() || sameStore(resource.data.toko_id);
-      allow update: if admin() || sameStore(resource.data.toko_id);
-      allow delete: if admin();
+      allow create: if signedIn() && request.resource.data.toko_id == myStore();
+      allow read: if isAdmin() || (signedIn() && resource.data.toko_id == myStore());
+      allow update: if isAdmin() || (signedIn() && resource.data.toko_id == myStore());
+      allow delete: if isAdmin();
     }
-    match /users/{userId} { allow read, write: if admin(); }
-    match /stores/{storeId}/{document=**} { allow read, write: if admin() || sameStore(storeId); }
-    // Licenses: kode aktivasi RumaPos. Kode acak = rahasia, jadi read terbuka untuk
-    // verifikasi aktivasi di app kasir. App hanya boleh mengisi field device/at
-    // (tidak bisa mengubah blocked) dan hanya pada kode yang belum terpakai.
+
+    // Akun kasir {pin: {role, tokoId}}: app butuh baca utk validasi PIN
+    match /users/{userId} {
+      allow read: if isAdmin() || signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Data per toko
+    match /stores/{storeId}/{document=**} {
+      allow read, write: if isAdmin() || (signedIn() && storeId == myStore());
+    }
+
+    // Binding device anonim → toko: device hanya boleh menulis dirinya
+    match /devices/{uid} {
+      allow read: if isAdmin() || (signedIn() && uid == request.auth.uid);
+      allow create, update: if signedIn() && uid == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // Daftar admin (diisi manual via script/console, tidak bisa diubah app)
+    match /admins/{uid} {
+      allow read: if signedIn() && uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Licenses: kode aktivasi app kasir. Kode acak = rahasia, jadi read terbuka
+    // untuk verifikasi aktivasi. App hanya boleh mengisi field device/at pada
+    // kode yang belum terpakai & belum diblokir.
     match /licenses/{code} {
       allow read: if true;
-      allow update: if (!('blocked' in resource.data) || resource.data.blocked == false)
+      allow update: if signedIn()
+        && (!('blocked' in resource.data) || resource.data.blocked == false)
         && (!('device' in resource.data) || resource.data.device == '')
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['device', 'at']);
-      // create/delete dari admin.html (catatan atas: butuh Auth aktif untuk admin())
-      allow create, delete: if admin() || !signedIn();
+      allow create, delete: if isAdmin();
     }
   }
 }

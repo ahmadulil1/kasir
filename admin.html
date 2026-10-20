@@ -36,6 +36,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <!-- GATE LOGIN OWNER -->
+  <div id="login-gate" style="position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;align-items:center;justify-content:center">
+    <div class="card" style="max-width:360px;width:100%;margin:0">
+      <h1 style="margin:0 0 5px;background:linear-gradient(to right,var(--acc),var(--acc2));-webkit-background-clip:text;color:transparent;font-size:26px">RumaPos HQ</h1>
+      <p style="color:var(--mute);font-size:13px;margin:0 0 20px">Masuk sebagai pemilik untuk membuka dashboard.</p>
+      <input id="lg-email" type="email" placeholder="Email pemilik">
+      <input id="lg-pass" type="password" placeholder="Password">
+      <button class="btn" onclick="window.doLogin()">🔓 Masuk</button>
+      <p id="lg-err" style="color:var(--red);font-size:12px;min-height:16px;margin:12px 0 0"></p>
+    </div>
+  </div>
+
   <aside>
     <h1>RumaPos HQ</h1>
     <nav style="display:flex; flex-direction:column; gap:5px">
@@ -43,6 +55,7 @@
       <button id="t-hr" onclick="showT('hr')">🧑‍💼 Pantau Kasir</button>
       <button id="t-akun" onclick="showT('akun')">⚙️ Kelola Akun</button>
       <button id="t-lic" onclick="showT('lic')">🔑 Lisensi</button>
+      <button style="background:transparent;color:var(--red);border:1px solid #334155" onclick="window.doLogout()">🚪 Keluar</button>
     </nav>
   </aside>
 
@@ -151,18 +164,42 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getFirestore, collection, onSnapshot, addDoc, doc, deleteDoc, setDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
     const app = initializeApp({
       apiKey: "AIzaSyCAdRE6UhCVRxZvWRwlUyw9xo_WWbRrWqA",
       authDomain: "kasir-v1-17fa7.firebaseapp.com",
       projectId: "kasir-v1-17fa7"
-    });
+    }, "admin-app");
     const db = getFirestore(app);
-    
+    const auth = getAuth(app);
+
+    // Gate login: dashboard hanya untuk pemilik yang sudah masuk
+    window.doLogin = async () => {
+        let em = document.getElementById('lg-email').value.trim();
+        let pw = document.getElementById('lg-pass').value;
+        document.getElementById('lg-err').textContent = '';
+        try {
+            await signInWithEmailAndPassword(auth, em, pw);
+        } catch(e) {
+            document.getElementById('lg-err').textContent = 'Login gagal: ' + (e.code || e.message).replace('auth/', '').replace(/-/g, ' ');
+        }
+    };
+    window.doLogout = async () => { await signOut(auth); };
+    let live = false;
+    onAuthStateChanged(auth, async (user) => {
+        // Tolak anonymous: admin wajib login email (antisipasi state bocor dari app kasir)
+        if(user && !user.email) { await signOut(auth); return; }
+        document.getElementById('login-gate').style.display = user ? 'none' : 'flex';
+        if(user && !live) { live = true; initLive(); }
+    });
+
     const targetSales = 1000000;
     let chart;
     const rp = n => 'Rp' + (n||0).toLocaleString('id-ID');
 
+    // Semua listener realtime dipasang SETELAH login terkonfirmasi (rules butuh auth)
+    const initLive = () => {
     // 1. Analisis Sales (Omzet, Performa Toko, Performa Kasir)
     onSnapshot(collection(db, "sales"), (snap) => {
         let omzet = 0, count = 0;
@@ -322,6 +359,7 @@
         });
         document.getElementById('list-lic').innerHTML = html || '<tr><td colspan="5" style="text-align:center">Belum ada kode. Klik Generate untuk membuat kode pertama.</td></tr>';
     });
+    }; // initLive
 
     window.genLic = async () => {
         let r = '';

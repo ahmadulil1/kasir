@@ -481,6 +481,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
     const app = initializeApp({
       apiKey: "AIzaSyCAdRE6UhCVRxZvWRwlUyw9xo_WWbRrWqA",
       authDomain: "kasir-v1-17fa7.firebaseapp.com",
@@ -488,7 +489,7 @@
       storageBucket: "kasir-v1-17fa7.firebasestorage.app",
       messagingSenderId: "422411368876",
       appId: "1:422411368876:web:a1c858eb0a08fc892be209"
-    });
+    }, "kasir-app");
     window.fdb = getFirestore(app);
     window.fadd = addDoc;
     window.fcol = collection;
@@ -496,6 +497,13 @@
     window.fget = getDoc;
     window.fupd = updateDoc;
     window.fset = setDoc;
+    // Auth anonim: identitas device utk rules Firestore (bind device → toko)
+    try {
+      const cred = await signInAnonymously(getAuth(app));
+      const toko = (window.db && window.db.tokoId) || 'TOKO_0000';
+      await setDoc(doc(window.fdb, 'devices', cred.user.uid), { tokoId: toko, at: Date.now() }, { merge: true });
+      window.fuid = cred.user.uid;
+    } catch(e) { console.error('Auth anonim gagal (mode offline?)', e); }
     window.dispatchEvent(new Event('firebase-ready'));
   </script>
   <script src="app.js"></script>
