@@ -149,16 +149,27 @@ window.login = async () => {
         activePin = p;
         localStorage.setItem('rp_last_pin', p);
         localStorage.setItem('rp_last_ts', String(Date.now()));
-        
+
+        // --- Binding device → toko (WAJIB: rules Firestore pakai devices/{uid}) ---
+        // Tanpa ini, pencatatan sesi & penjualan ditolak (myStore() kosong).
+        if(window.fdb && navigator.onLine && window.fuid) {
+            try {
+                await window.fset(window.fdoc(window.fdb, 'devices', window.fuid),
+                    { tokoId: db.tokoId, owner: role === 'owner', device: window.DEVICE_ID, at: Date.now() }, { merge: true });
+            } catch(e) { console.error('Binding device gagal', e); }
+        }
+
         // --- Rekam Jam Masuk Kasir ke Cloud ---
         if(window.fdb && navigator.onLine) {
-            let ref = await window.fadd(window.fcol(window.fdb, "sessions"), {
-                toko_id: db.tokoId,
-                kasir: activePin,
-                masuk: Date.now(),
-                keluar: null
-            });
-            sessionId = ref.id;
+            try {
+                let ref = await window.fadd(window.fcol(window.fdb, "sessions"), {
+                    toko_id: db.tokoId,
+                    kasir: activePin,
+                    masuk: Date.now(),
+                    keluar: null
+                });
+                sessionId = ref.id;
+            } catch(e) { console.error('Rekam sesi gagal (diabaikan)', e); }
         }
 
         document.querySelectorAll('.role-own').forEach(e => e.style.display = role === 'owner' ? 'block' : 'none');
@@ -426,7 +437,7 @@ window.printBarcode = i => {
     $('printbar').style.display = 'none';
 };
 
-const CATS = () => ['Semua', ...db.categories];
+const CATS = () => ['Semua', ...db.categories.filter(c => c && c !== 'null' && c !== 'undefined' && String(c).trim())];
 let catFilter = 'Semua', imgBuf = '';
 
 window.pickCat = c => { catFilter = c; renderGrid(); };

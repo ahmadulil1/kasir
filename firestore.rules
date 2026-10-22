@@ -13,10 +13,12 @@ service cloud.firestore {
     }
 
     // Transaksi: app hanya boleh menulis ke tokonya sendiri
+    // (admin boleh membuat transaksi dummy lewat tombol "Tembak Data Dummy")
     match /sales/{saleId} {
-      allow create: if signedIn() && request.resource.data.toko_id == myStore()
+      allow create: if isAdmin()
+        || (signedIn() && request.resource.data.toko_id == myStore()
         && request.resource.data.total is int
-        && request.resource.data.total > 0;
+        && request.resource.data.total > 0);
       allow read: if isAdmin() || (signedIn() && resource.data.toko_id == myStore());
       allow update, delete: if isAdmin();
     }
@@ -55,13 +57,14 @@ service cloud.firestore {
 
     // Licenses: kode aktivasi app kasir. Kode acak = rahasia, jadi read terbuka
     // untuk verifikasi aktivasi. App hanya boleh mengisi field device/at pada
-    // kode yang belum terpakai & belum diblokir.
+    // kode yang belum terpakai & belum diblokir. Admin bebas update (blokir).
     match /licenses/{code} {
       allow read: if true;
-      allow update: if signedIn()
-        && (!('blocked' in resource.data) || resource.data.blocked == false)
-        && (!('device' in resource.data) || resource.data.device == '')
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['device', 'at']);
+      allow update: if isAdmin()
+        || (signedIn()
+          && (!('blocked' in resource.data) || resource.data.blocked == false)
+          && (!('device' in resource.data) || resource.data.device == '')
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['device', 'at']));
       allow create, delete: if isAdmin();
     }
   }

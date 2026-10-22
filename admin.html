@@ -198,6 +198,12 @@
     let chart;
     const rp = n => 'Rp' + (n||0).toLocaleString('id-ID');
 
+    // Alfabet kode aktivasi (tanpa O/0/I/1 agar tak tertukar) & format tampilan
+    // WAJIB di scope modul: dipakai window.genLic/blockLic (di luar initLive)
+    const CHARSM = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const fmtCode = code => (code && code.length >= 12) ? code.slice(0,4) + '-' + code.slice(4,8) + '-' + code.slice(8,12) : (code || '');
+    window.fmtCode = fmtCode;
+
     // Semua listener realtime dipasang SETELAH login terkonfirmasi (rules butuh auth)
     const initLive = () => {
     // 1. Analisis Sales (Omzet, Performa Toko, Performa Kasir)
@@ -336,8 +342,6 @@
     };
 
     // 4. Lisensi: kode aktivasi RumaPos
-    const CHARSM = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // tanpa O/0/I/1 agar tak tertukar
-    const fmtCode = code => (code && code.length >= 12) ? code.slice(0,4) + '-' + code.slice(4,8) + '-' + code.slice(8,12) : (code || '');
     window.fmtCode = fmtCode;
 
     onSnapshot(collection(db, "licenses"), (snap) => {
